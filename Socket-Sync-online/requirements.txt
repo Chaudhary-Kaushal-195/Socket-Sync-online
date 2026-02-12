@@ -1,0 +1,13 @@
+flask
+flask-socketio
+flask-cors
+eventlet
+streamlit
+pandas
+matplotlib
+qrcode
+numpy
+# Production
+gunicorn
+python-dotenv
+firebase-admin

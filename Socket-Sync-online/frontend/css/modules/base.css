@@ -1,0 +1,255 @@
+/* =========================================
+   BASE STYLES - Modern Animations & Resets
+   ========================================= */
+
+/* Smooth page entrance */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    background-color: var(--bg-dark);
+    font-family: var(--font-family);
+    color: var(--text-primary);
+    overflow: hidden;
+    animation: fadeIn var(--duration-slow) var(--ease-out);
+
+    /* Smooth font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========== UNIVERSAL TRANSITIONS ========== */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* Interactive elements get smooth transitions */
+a,
+button,
+input,
+textarea,
+select,
+.btn,
+.chat-item,
+.ctx-item,
+.preview-item {
+    transition:
+        transform var(--duration-fast) var(--ease-smooth),
+        background-color var(--duration-normal) var(--ease-smooth),
+        border-color var(--duration-normal) var(--ease-smooth),
+        box-shadow var(--duration-normal) var(--ease-smooth),
+        opacity var(--duration-normal) var(--ease-smooth);
+}
+
+/* ========== BUTTON MICRO-INTERACTIONS ========== */
+button,
+.btn {
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+button:active:not(:disabled),
+.btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+button:disabled,
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Hover lift effect */
+button:hover:not(:disabled),
+.btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+/* ========== FOCUS STATES (Accessibility) ========== */
+button:focus-visible,
+.btn:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+    outline: none;
+    box-shadow: var(--glow-focus) !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* Remove default outline but keep for keyboard users */
+:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* ========== LINK STYLES ========== */
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color var(--duration-fast) var(--ease-smooth);
+}
+
+a:hover {
+    color: var(--primary-hover);
+}
+
+/* ========== CUSTOM SMOOTH SCROLLBARS ========== */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-full);
+    transition: background var(--duration-normal);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+body.light-mode ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+body.light-mode ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+/* ========== SELECTION STYLES ========== */
+::selection {
+    background: rgba(255, 97, 210, 0.3);
+    color: var(--text-primary);
+}
+
+body.light-mode ::selection {
+    background: rgba(99, 102, 241, 0.2);
+}
+
+/* ========== UTILITY ANIMATIONS ========== */
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 0.4;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes glow {
+
+    0%,
+    100% {
+        box-shadow: var(--glow-primary);
+    }
+
+    50% {
+        box-shadow: var(--glow-primary-strong);
+    }
+}
+
+/* Loading shimmer effect */
+.skeleton {
+    background: linear-gradient(90deg,
+            rgba(255, 255, 255, 0.03) 25%,
+            rgba(255, 255, 255, 0.08) 50%,
+            rgba(255, 255, 255, 0.03) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-sm);
+}
+
+body.light-mode .skeleton {
+    background: linear-gradient(90deg,
+            rgba(0, 0, 0, 0.03) 25%,
+            rgba(0, 0, 0, 0.06) 50%,
+            rgba(0, 0, 0, 0.03) 75%);
+    background-size: 200% 100%;
+}
+
+/* ========== UTILITY CLASSES ========== */
+.hidden {
+    display: none !important;
+}
+
+.invisible {
+    visibility: hidden;
+}
+
+.glass {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+}
+
+.no-select {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Smooth image loading */
+img {
+    transition: opacity var(--duration-normal) var(--ease-smooth);
+}
+
+img[loading="lazy"] {
+    opacity: 0;
+}
+
+img[loading="lazy"].loaded,
+img:not([loading="lazy"]) {
+    opacity: 1;
+}

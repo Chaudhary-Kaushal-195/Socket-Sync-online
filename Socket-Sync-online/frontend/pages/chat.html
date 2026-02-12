@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Socket-Sync</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/modals.css">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+
+</head>
+
+<body>
+
+    <div id="app" class="container-fluid app " style="min-height: auto;">
+        <!-- Alert Container -->
+        <div id="alert-container"
+            style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 90%; max-width: 500px;">
+        </div>
+
+        <!-- First row -->
+
+        <div class="row">
+            <div class="header">
+                <div class="header-controls">
+                    <button class="btn btn-sm btn-outline-light sidebar-toggle-btn" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h2>
+                        <img src="../material/images/rocket.gif" style="height: 30px; border-radius: 4px;">
+                        Socket-Sync
+                    </h2>
+                </div>
+
+                <div class="header-controls">
+                    <div class="user-info" onclick="openProfileModal()" style="cursor: pointer;" tabindex="0"
+                        role="button">
+                        <div style="font-size:0.8rem; opacity:0.7">Welcome back</div>
+                        <div id="me" style="font-weight:600"></div>
+                    </div>
+                    <i id="themeToggle" class="fas fa-moon logout-btn" onclick="toggleTheme()" title="Toggle Theme"
+                        style="margin-right: 15px;" tabindex="0" role="button"></i>
+                    <i class="fas fa-right-from-bracket logout-btn" onclick="logout()" title="Logout" tabindex="0"
+                        role="button"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Second row -->
+
+        <div class="row position-relative overflow-hidden main-row">
+
+            <!-- SIDEBAR -->
+            <div id="sidebar" class="sidebar">
+
+                <div class="sidebar-header">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <h3 style="margin:0; font-size: 1.5rem; font-weight: 700;">Contacts</h3>
+                            <button class="btn btn-sm btn-primary" onclick="openAddContactModal()"
+                                style="border-radius:50%; width:30px; height:30px; padding:0; display:flex; align-items:center; justify-content:center;">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div
+                            style="font-size: 0.8rem; opacity: 0.7; border: 1px solid var(--border-color); padding: 2px 8px; border-radius: 12px;">
+                            Private</div>
+                    </div>
+                </div>
+
+                <!-- Search Bar -->
+                <div style="padding: 0 20px 10px 20px;">
+                    <div
+                        style="background: var(--bg-input); padding: 10px 14px; border-radius: 12px; display: flex; align-items: center; gap: 10px; color: var(--text-secondary); border: 1px solid var(--border-color);">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search chats..."
+                            style="background:transparent; border:none; width:100%; color: var(--text-primary); outline:none;">
+                    </div>
+                </div>
+
+                <div id="chatList" class="chat-list">
+                    <!-- Chat items will be injected here -->
+                </div>
+            </div>
+
+            <!-- CHAT -->
+            <div id="chatArea" class="chat-area">
+                <!-- EMPTY CHAT PLACEHOLDER -->
+                <div id="emptyChat" class="d-flex flex-column justify-content-center align-items-center text-center"
+                    style="height:100%; color: var(--text-secondary);">
+
+                    <img src="../material/images/cloud-network.gif"
+                        style="width:180px; opacity:0.8; margin-bottom:20px; border-radius: 20px;">
+
+                    <h3 style="color: var(--accent-color);">Socket-Sync</h3>
+                    <p style="font-size:14px; max-width:300px;">
+                        Select a chat to start messaging securely.
+                    </p>
+                </div>
+
+                <div class="chat-header hidden" style="margin-top:10px;">
+                    <div style="display:flex; align-items:center; gap:10px; flex:1;">
+                        <div class="chat-info" onclick="toggleRightSidebar()"
+                            style="cursor: pointer; display:flex; align-items:center; gap:10px;" tabindex="0"
+                            role="button">
+                            <img id="chatAvatar" src=""
+                                style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+                            <div>
+                                <h3 id="chatHeaderTitle" style="margin:0; font-size:1rem;"></h3>
+                                <span id="chatStatus" style="font-size:0.8rem; opacity:0.7;"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="saveContactBtn" class="btn btn-sm btn-primary hidden" onclick="saveCurrentContact()"
+                        style="margin-right:15px; border-radius:20px; font-size:0.85rem;">
+                        <i class="fas fa-user-plus" style="margin-right:5px;"></i> Save
+                    </button>
+
+                    <div class="chat-actions">
+                        <div onclick="toggleRightSidebar()" style="cursor: pointer; padding: 10px; margin-right: -10px;"
+                            title="Infos" tabindex="0" role="button">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SELECTION HEADER (Initially Hidden) -->
+                <div id="selectionHeader" class="chat-header hidden" style="background: var(--bg-card); z-index: 101;">
+                    <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
+                        <span onclick="toggleSelectionMode()" style="cursor: pointer; font-size: 1.2rem;" tabindex="0"
+                            role="button">
+                            <i class="fas fa-times"></i>
+                        </span>
+                        <span id="selectedCount" style="font-weight: 600; font-size: 1.1rem;">0 Selected</span>
+                    </div>
+                    <div style="display: flex; gap: 20px;">
+                        <span onclick="bulkDelete()" style="cursor: pointer;" title="Delete" tabindex="0" role="button">
+                            <i class="fas fa-trash"></i>
+                        </span>
+                        <span onclick="bulkCopy()" style="cursor: pointer;" title="Copy" tabindex="0" role="button">
+                            <i class="fas fa-copy"></i>
+                        </span>
+                        <span onclick="bulkForward()" style="cursor: pointer;" title="Forward" tabindex="0"
+                            role="button">
+                            <i class="fas fa-share"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Typing Indicator -->
+                <div id="typingIndicator" class="typing-indicator hidden">
+                    <i class="fas fa-ellipsis-h"></i> <span id="typingUserName"></span> is typing...
+                </div>
+
+
+                <div id="messages" class="messages hidden"></div>
+
+                <!-- CONTEXT MENU -->
+                <div id="ctxMenu" class="ctx-menu hidden">
+                    <div class="ctx-item" onclick="ctxDelete()" tabindex="0" role="button">
+                        <i class="fas fa-trash"></i> Delete
+                    </div>
+                    <div id="ctxItemCopyText" class="ctx-item" onclick="ctxCopyText()" tabindex="0" role="button">
+                        <i class="fas fa-copy"></i> Copy Text
+                    </div>
+                    <div id="ctxItemCopyImage" class="ctx-item" onclick="ctxCopyImage()" tabindex="0" role="button">
+                        <i class="fas fa-image"></i> Copy Image
+                    </div>
+                    <div class="ctx-item" onclick="ctxSelect()" tabindex="0" role="button">
+                        <i class="fas fa-check-circle"></i> Select
+                    </div>
+                    <div class="ctx-item" onclick="ctxForward()" tabindex="0" role="button">
+                        <i class="fas fa-share"></i> Forward
+                    </div>
+                </div>
+
+                <!-- DRAG OVERLAY -->
+                <div id="dragOverlay" class="drag-overlay hidden">
+                    <div class="drag-content">
+                        <i class="fas fa-cloud-upload-alt"
+                            style="font-size: 5rem; margin-bottom: 20px; color: var(--primary-color);"></i>
+                        <h3>Drop files to upload</h3>
+                    </div>
+                </div>
+
+                <!-- MEDIA MODAL -->
+                <div id="mediaModal" class="media-modal hidden">
+                    <div class="media-modal-header">
+                        <span class="media-close" onclick="closeMediaModal()" tabindex="0" role="button">
+                            <i class="fas fa-times"></i>
+                        </span>
+                    </div>
+
+                    <img id="modalImage" class="hidden">
+                    <video id="modalVideo" controls class="hidden"></video>
+
+                    <button id="btnViewCarousel" class="btn btn-sm btn-outline-light hidden"
+                        style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1050; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.3); backdrop-filter: blur(4px);">
+                        <i class="fas fa-images"></i> View All in Carousel
+                    </button>
+                </div>
+
+                <!-- CAROUSEL MODAL (BOOTSTRAP STYLE) -->
+                <div id="carouselModal" class="media-modal hidden" style="background: rgba(0,0,0,0.95);">
+                    <div class="media-modal-header">
+                        <span class="media-close" onclick="closeCarouselModal()" tabindex="0" role="button"
+                            style="z-index: 1060;">
+                            <i class="fas fa-times"></i>
+                        </span>
+                    </div>
+
+                    <div id="carouselContainer" class="carousel slide"
+                        style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                        <div class="carousel-inner" id="carouselItems" style="height: 100%; width: 100%;">
+                            <!-- Items injected here -->
+                        </div>
+
+                        <button class="carousel-control-prev" type="button" onclick="carouselPrev()"
+                            style="opacity: 1; width: 60px; background: rgba(255,255,255,0.1); border-radius: 0 10px 10px 0; margin-right: auto;">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"
+                                style="width: 30px; height: 30px;"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" onclick="carouselNext()"
+                            style="opacity: 1; width: 60px; background: rgba(255,255,255,0.1); border-radius: 10px 0 0 10px; margin-left: auto;">
+                            <span class="carousel-control-next-icon" aria-hidden="true"
+                                style="width: 30px; height: 30px;"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    </div>
+                </div>
+
+
+
+
+                <!-- FORWARD MODAL -->
+                <div id="forwardModal" class="media-modal hidden" style="align-items: flex-start; padding-top: 100px;">
+                    <div class="auth-box"
+                        style="width: 400px; max-height: 80vh; display: flex; flex-direction: column;">
+                        <span class="media-close" onclick="closeForwardModal()"
+                            style="position: absolute; top: 10px; right: 15px; color: var(--text-secondary); font-size: 24px;"
+                            tabindex="0" role="button">×</span>
+                        <h3 style="margin-bottom: 20px;">Forward to...</h3>
+                        <div id="forwardList" class="chat-list" style="overflow-y: auto; flex: 1;">
+                            <!-- Users injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ADD CONTACT MODAL -->
+                <div id="addContactModal" class="media-modal hidden">
+                    <div class="auth-box" style="width: 350px; text-align: center; position: relative;">
+                        <span class="media-close" onclick="closeAddContactModal()"
+                            style="position: absolute; top: 10px; right: 15px; color: var(--text-secondary); font-size: 24px;"
+                            tabindex="0" role="button">×</span>
+
+                        <h3 style="margin-bottom: 20px;">Add Contact</h3>
+                        <p style="color:var(--text-secondary); margin-bottom:15px;">Enter the User ID of the person you
+                            want to chat with.</p>
+
+                        <input type="text" id="newContactId" placeholder="User ID (e.g. user123)"
+                            style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-primary);">
+
+                        <button class="btn btn-primary w-100" onclick="addContact()">Add Contact</button>
+                    </div>
+                </div>
+
+                <!-- PROFILE MODAL - Dashboard Style -->
+                <div id="profileModal" class="media-modal hidden">
+                    <div class="profile-dashboard">
+                        <!-- Close Button -->
+                        <span class="media-close" onclick="closeProfileModal()" tabindex="0" role="button">
+                            <i class="fas fa-times"></i>
+                        </span>
+
+                        <!-- Banner Header with Gradient -->
+                        <div class="profile-banner">
+                            <div class="banner-gradient"></div>
+                        </div>
+
+                        <!-- Profile Header Section (overlapping banner) -->
+                        <div class="profile-header-section">
+                            <div class="profile-avatar-wrapper">
+                                <img id="profileAvatar" src="" onclick="enlargeAvatar()" title="Click to enlarge">
+                                <div class="avatar-edit-btn"
+                                    onclick="document.getElementById('profileAvatarInput').click()"
+                                    title="Change Photo">
+                                    <i class="fas fa-camera"></i>
+                                </div>
+                                <div class="avatar-remove-btn" onclick="resetProfilePicture()"
+                                    title="Remove Profile Photo">
+                                    <i class="fas fa-trash-alt"></i>
+                                </div>
+                                <input type="file" id="profileAvatarInput" hidden accept="image/*">
+                            </div>
+                            <div class="profile-info">
+                                <h3 id="profileName" class="profile-user-name"></h3>
+                                <p id="profileId" class="profile-user-id"></p>
+                            </div>
+                            <div class="profile-social">
+                                <button class="social-text-btn danger" onclick="logout()" title="Logout">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </button>
+                                <button class="social-text-btn danger" onclick="confirmDeleteAccount()"
+                                    title="Delete Account"
+                                    style="margin-left: 10px; background: rgba(255, 69, 58, 0.1); color: #ff453a; border: 1px solid rgba(255, 69, 58, 0.3);">
+                                    <i class="fas fa-user-times"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Stats Cards Row -->
+                        <div class="profile-stats">
+                            <div class="stat-card streak">
+                                <i class="fas fa-fire stat-icon"></i>
+                                <div class="stat-info">
+                                    <span class="stat-label">Streak</span>
+                                    <span id="statStreak" class="stat-value">0</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <i class="fas fa-users stat-icon"></i>
+                                <div class="stat-info">
+                                    <span class="stat-label">Contacts</span>
+                                    <span id="statContacts" class="stat-value">0</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <i class="fas fa-calendar-check stat-icon"></i>
+                                <div class="stat-info">
+                                    <span class="stat-label">Joined</span>
+                                    <span id="statJoined" class="stat-value">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- QR Code Section -->
+                        <div class="profile-qr-section">
+                            <div class="qr-card" onclick="enlargeQr()">
+                                <div class="qr-box">
+                                    <img id="myQrCode" src="">
+                                </div>
+                                <div class="qr-info">
+                                    <h4>Login QR Code</h4>
+                                    <p>Scan with another device to login instantly</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="profile-footer-actions">
+                            <button class="footer-btn primary" onclick="downloadQr()">
+                                <i class="fas fa-download"></i> Download QR
+                            </button>
+                            <button class="footer-btn" onclick="shareQr()">
+                                <i class="fas fa-share-alt"></i> Share QR
+                            </button>
+                            <button class="footer-btn" onclick="viewStats()">
+                                <i class="fas fa-chart-bar"></i> Activity
+                            </button>
+                            <button class="footer-btn" onclick="openAnalyticsDashboard()">
+                                <i class="fas fa-pie-chart"></i> Analytics
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- FILE PREVIEW -->
+                <div id="filePreview" class="file-preview hidden">
+                    <div class="preview-header"
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span class="preview-title" style="font-weight: 600;">Selected Files</span>
+                        <span class="preview-close" onclick="clearFileSelection()" role="button" tabindex="0"
+                            title="Close Preview">
+                            <i class="fas fa-times"></i>
+                        </span>
+                    </div>
+                    <div id="previewList" class="preview-list">
+                        <!-- Preview Items Injected Here -->
+                    </div>
+                    <span class="preview-clear-all" onclick="clearFileSelection()">Clear All</span>
+                </div>
+
+                <div class="input-area hidden" style="position: relative;">
+                    <div id="recordingOverlay" class="recording-overlay hidden"
+                        style="position: absolute; top:0; left:0; width:100%; height:100%; background: var(--bg-card); display:flex; align-items:center; justify-content:space-between; padding:0 20px; border-radius: 24px; z-index: 2000;">
+                        <div style="display:flex; align-items:center; gap:10px; color: var(--accent-color);">
+                            <i class="fas fa-circle-notch fa-spin"></i>
+                            <span id="recordTimer" style="font-family:monospace; font-weight:600;">00:00</span>
+                        </div>
+                        <div style="display:flex; gap:15px;">
+                            <button type="button" onclick="cancelRecording()"
+                                style="background:none; border:none; padding:10px; cursor:pointer;" title="Cancel">
+                                <i class="fas fa-trash" style="color: #ff4d4d; font-size: 1.2rem;"></i>
+                            </button>
+                            <button type="button" onclick="stopAndSendRecording()"
+                                style="background:none; border:none; padding:10px; cursor:pointer;" title="Send">
+                                <i class="fas fa-paper-plane"
+                                    style="color: var(--accent-color); font-size: 1.2rem;"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <input type="file" id="fileInput" hidden multiple>
+                    <button onclick="document.getElementById('fileInput').click()" title="Attach File">
+                        <img id="input-file" src="../material/images/paperclip.png" style="width: 35px; height: 35px;">
+                    </button>
+
+                    <input id="msg" placeholder="Type a message...">
+                    <button id="btnMic" onclick="startRecording()" title="Record Voice"
+                        style="background: none; border: none; color: var(--text-secondary); margin-right: 5px;">
+                        <i class="fas fa-microphone" style="font-size: 1.2rem;"></i>
+                    </button>
+                    <button class="btn-send" onclick="send()">
+                        Send
+                    </button>
+                </div>
+            </div>
+
+            <!-- RIGHT SIDEBAR (INFO) -->
+            <div id="rightSidebar" class="right-sidebar closed">
+                <div class="right-header">
+                    <span onclick="toggleRightSidebar()" style="cursor: pointer;" tabindex="0" role="button"><i
+                            class="fas fa-times"></i></span>
+                    <span>Contact Info</span>
+                    <span style="width: 20px;"></span>
+                </div>
+
+                <div class="right-profile">
+                    <img id="infoAvatar" src="">
+                    <h3 id="infoName"></h3>
+                </div>
+
+                <div class="media-section">
+                    <div class="media-header-row" onclick="openMediaGallery()" tabindex="0" role="button">
+                        <span>Media, links and docs</span>
+                        <span id="mediaCount" style="color: var(--text-secondary);">0 ></span>
+                    </div>
+                    <div id="mediaPreview" class="media-preview-row">
+                        <!-- Tiny thumbnails -->
+                    </div>
+                </div>
+
+                <div class="right-section-content">
+                    <i class="fas fa-lock" style="color: var(--accent-color); margin-right: 10px;"></i>
+                    Messages are end-to-end encrypted.
+                </div>
+
+                <div class="right-section-title" style="color: #ff4d4d; margin-top: 20px;">Danger Zone</div>
+                <div class="right-section-content" style="border: none;">
+                    <button id="blockBtn" onclick="blockUser()" class="btn btn-outline-danger w-100"
+                        style="margin-bottom: 10px;">
+                        <i class="fas fa-ban"></i> Block User
+                    </button>
+                    <button onclick="clearChat()" class="btn btn-danger w-100">
+                        <i class="fas fa-trash"></i> Clear Chat
+                    </button>
+                </div>
+            </div>
+
+            <!-- FULL SCREEN MEDIA GALLERY OVERLAY -->
+            <div id="galleryOverlay" class="gallery-overlay hidden">
+                <div class="gallery-header">
+                    <span onclick="closeMediaGallery()" tabindex="0" role="button"><i
+                            class="fas fa-arrow-left"></i></span>
+                    <div class="gallery-tabs">
+                        <div class="tab active" onclick="switchTab('media')" tabindex="0" role="button">Media</div>
+                        <div class="tab" onclick="switchTab('docs')" tabindex="0" role="button">Docs</div>
+                    </div>
+                </div>
+                <div id="galleryContent" class="gallery-content">
+                    <!-- Grid -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- DELETE OPTIONS MODAL -->
+    <div id="deleteOptionsModal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width:300px; text-align:center;">
+            <h3>Delete Message?</h3>
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
+                <button id="btnDeleteEveryone" class="btn btn-danger" onclick="confirmDelete('everyone')">Delete for
+                    everyone</button>
+                <button class="btn btn-primary" onclick="confirmDelete('me')">Delete for me</button>
+                <button class="btn btn-outline" onclick="cancelDelete()" style="margin-top:5px;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modular Scripts (Order Important) -->
+
+    <script src="../js/globals.js"></script>
+    <script src="../js/modules/ui-renderer.js"></script>
+    <script src="../js/modules/file-handler.js"></script>
+    <script src="../js/modules/socket-client.js"></script>
+
+    <script src="../js/ui.js"></script>
+
+    <script src="../js/media.js"></script>
+
+
+
+    <script src="../js/chat.js"></script>
+    <script src="../js/typing.js"></script>
+    <script src="../js/keyboard.js"></script>
+
+
+</body>
+
+</html>
