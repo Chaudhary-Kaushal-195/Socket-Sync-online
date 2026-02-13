@@ -14,24 +14,32 @@ class Database:
             database_url = "https://socketsync-1f92b-default-rtdb.firebaseio.com/"
             
             if cred_json:
-                cred_dict = json.loads(cred_json)
-                cred = credentials.Certificate(cred_dict)
-                firebase_admin.initialize_app(cred, {
-                    'databaseURL': database_url
-                })
+                try:
+                    print(f"DEBUG: Found FIREBASE_CREDENTIALS (len={len(cred_json)})")
+                    cred_dict = json.loads(cred_json)
+                    cred = credentials.Certificate(cred_dict)
+                    firebase_admin.initialize_app(cred, {
+                        'databaseURL': database_url
+                    })
+                    print("DEBUG: Firebase Initialized Successfully via Env Var")
+                except Exception as e:
+                    print(f"CRITICAL: Failed to init Firebase from Env Var: {e}")
+                    if cred_json: print(f"DEBUG VAR CONTENT (First 50): {cred_json[:50]}")
             else:
                 # LOCAL: Try to load from local file if env var not set
                 try:
                     cred_path = "serviceAccountKey.json"
+                    print(f"DEBUG: Looking for local credentials at {cred_path}")
                     if os.path.exists(cred_path):
                         cred = credentials.Certificate(cred_path)
                         firebase_admin.initialize_app(cred, {
                             'databaseURL': database_url
                         })
+                        print("DEBUG: Firebase Initialized Successfully via Local File")
                     else:
-                        print("WARNING: No Firebase Credentials found. DB will fail.")
+                        print("WARNING: No Firebase Credentials found (Env or Local). DB will fail.")
                 except Exception as e:
-                    print(f"Failed to init Firebase: {e}")
+                    print(f"Failed to init Firebase locally: {e}")
         
         try:
             self.ref = db.reference('/')
