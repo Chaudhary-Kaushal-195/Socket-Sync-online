@@ -546,4 +546,7 @@ def start_dashboard():
 
 # ================== RUN ==================
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True, allow_unsafe_werkzeug=True)
+    port = int(os.environ.get("PORT", 5000))
+    # In production (when run directly), debug should likely be False, but we keep it True for now as requested/defaults
+    # However, Gunicorn will likely bypass this block entirely.
+    socketio.run(app, host="0.0.0.0", port=port, debug=True, allow_unsafe_werkzeug=True)

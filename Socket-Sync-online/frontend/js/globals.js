@@ -1,7 +1,7 @@
 // ================= SOCKET =================
 const API_BASE = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost" || window.location.protocol === "file:")
     ? "http://127.0.0.1:5000"
-    : "https://socket-sync-backend.onrender.com"; // TODO: Replace with your actual Render Backend URL
+    : "https://socket-sync-backend.onrender.com"; // Render Backend URL
 const socket = io(API_BASE);
 
 // ================= GLOBALS =================
