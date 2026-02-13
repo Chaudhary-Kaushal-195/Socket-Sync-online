@@ -26,7 +26,7 @@ app = Flask(__name__)
 cors_origin = os.getenv("FRONTEND_URL", "*")
 CORS(app, resources={r"/*": {"origins": cors_origin}})
 
-socketio = SocketIO(app, cors_allowed_origins=cors_origin, async_mode='threading')
+socketio = SocketIO(app, cors_allowed_origins=cors_origin, async_mode='eventlet')
 
 # ================== DATABASE ==================
 db = Database()
