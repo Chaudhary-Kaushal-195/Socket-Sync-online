@@ -380,97 +380,57 @@ async function signup() {
 }
 
 // ================= SOCIAL SIGNUP =================
-// Note: For production, you need to set up OAuth credentials
+import { auth, googleProvider, githubProvider, signInWithPopup } from './firebase-config.js';
 
-function signupWithGoogle() {
-    // Google OAuth 2.0 Configuration
-    const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
-    const REDIRECT_URI = encodeURIComponent(window.location.origin + '/oauth-callback');
-    const SCOPE = encodeURIComponent('email profile');
-
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${GOOGLE_CLIENT_ID}` +
-        `&redirect_uri=${REDIRECT_URI}` +
-        `&response_type=token` +
-        `&scope=${SCOPE}` +
-        `&prompt=select_account`;
-
-    if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
-        alert('Google OAuth Setup Required\n\n' +
-            'To enable Google signup:\n' +
-            '1. Go to Google Cloud Console\n' +
-            '2. Create OAuth 2.0 credentials\n' +
-            '3. Replace GOOGLE_CLIENT_ID in signup.js\n\n' +
-            'For now, please use email/password signup.');
-        return;
+window.signupWithGoogle = async function () {
+    try {
+        const result = await signInWithPopup(auth, googleProvider);
+        await handleSocialSignup(result.user);
+    } catch (error) {
+        console.error("Google Signup Error:", error);
+        alert("Google Signup Failed: " + error.message);
     }
-
-    const popup = window.open(authUrl, 'Google Signup',
-        'width=500,height=600,scrollbars=yes');
-
-    window.addEventListener('message', handleOAuthSignup);
 }
 
-function signupWithGithub() {
-    const GITHUB_CLIENT_ID = 'YOUR_GITHUB_CLIENT_ID';
-    const REDIRECT_URI = encodeURIComponent(window.location.origin + '/oauth-callback');
-    const SCOPE = encodeURIComponent('user:email');
-
-    const authUrl = `https://github.com/login/oauth/authorize?` +
-        `client_id=${GITHUB_CLIENT_ID}` +
-        `&redirect_uri=${REDIRECT_URI}` +
-        `&scope=${SCOPE}`;
-
-    if (GITHUB_CLIENT_ID === 'YOUR_GITHUB_CLIENT_ID') {
-        alert('GitHub OAuth Setup Required\n\n' +
-            'To enable GitHub signup:\n' +
-            '1. Go to GitHub Developer Settings\n' +
-            '2. Create a new OAuth App\n' +
-            '3. Replace GITHUB_CLIENT_ID in signup.js\n\n' +
-            'For now, please use email/password signup.');
-        return;
+window.signupWithGithub = async function () {
+    try {
+        const result = await signInWithPopup(auth, githubProvider);
+        await handleSocialSignup(result.user);
+    } catch (error) {
+        console.error("GitHub Signup Error:", error);
+        alert("GitHub Signup Failed: " + error.message);
     }
-
-    const popup = window.open(authUrl, 'GitHub Signup',
-        'width=500,height=600,scrollbars=yes');
-
-    window.addEventListener('message', handleOAuthSignup);
 }
 
-async function handleOAuthSignup(event) {
-    if (event.origin !== window.location.origin) return;
+async function handleSocialSignup(firebaseUser) {
+    try {
+        const payload = {
+            email: firebaseUser.email,
+            name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+            avatar: firebaseUser.photoURL
+        };
 
-    const { provider, token, user } = event.data || {};
+        const r = await fetch(`${API_BASE}/social-login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
 
-    if (token && user) {
-        try {
-            // OAuth signup creates account and logs in
-            const r = await fetch(`${API_BASE}/signup/oauth`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    provider: provider,
-                    token: token,
-                    email: user.email,
-                    name: user.name,
-                    avatar: user.picture || user.avatar_url
-                })
-            });
-
-            const data = await r.json();
-            if (data.error) {
-                alert("OAuth Signup Failed: " + data.error);
-            } else {
-                localStorage.setItem("currentUser", JSON.stringify(data));
-                window.location.href = "/chat";
-            }
-        } catch (err) {
-            alert("OAuth signup failed: " + err.message);
+        const data = await r.json();
+        if (data.error) {
+            alert("Signup Failed: " + data.error);
+        } else {
+            localStorage.setItem("currentUser", JSON.stringify(data));
+            window.location.href = "/chat";
         }
+    } catch (err) {
+        alert("Server Signup Failed: " + err.message);
     }
-
-    window.removeEventListener('message', handleOAuthSignup);
 }
+
+// Attach globals for HTML
+window.signup = signup;
+window.updateAvatarPreview = updateAvatarPreview;
 
 
 // Handle Enter key

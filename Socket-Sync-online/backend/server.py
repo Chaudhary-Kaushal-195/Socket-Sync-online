@@ -88,6 +88,51 @@ def login_qr():
         return jsonify(user)
     return jsonify(error="Invalid QR Token"), 401
 
+@app.post("/social-login")
+def social_login():
+    data = request.json
+    email = data.get("email")
+    name = data.get("name")
+    avatar = data.get("avatar")
+    
+    if not email:
+        return jsonify(error="Email is required"), 400
+        
+    # Check if user exists
+    user = db.get_user_by_id(email)
+    
+    if user:
+        # Login
+        # Update avatar if changed? Optional.
+        # db.update_avatar(email, avatar)
+        
+        # Remove password from response
+        if "password" in user:
+            del user["password"]
+            
+        db.update_login_streak(email)
+        return jsonify(user)
+    else:
+        # Signup
+        # Generate random password
+        random_pw = secrets.token_urlsafe(16)
+        hashed_pw = generate_password_hash(random_pw)
+        
+        new_user = {
+            "userId": email,
+            "name": name,
+            "password": hashed_pw,
+            "avatar": avatar or f"https://ui-avatars.com/api/?name={name}"
+        }
+        
+        success, error = db.create_user(new_user)
+        if success:
+            # Return user data without password
+            del new_user["password"]
+            return jsonify(new_user)
+        else:
+            return jsonify(error=error), 400
+
 
 @app.post("/user/avatar")
 def update_avatar_endpoint():

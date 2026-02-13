@@ -215,103 +215,56 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ================= SOCIAL LOGIN =================
-// Note: For production, you need to set up OAuth credentials in Google Cloud Console / GitHub Developer Settings
+import { auth, googleProvider, githubProvider, signInWithPopup } from './firebase-config.js';
 
-function loginWithGoogle() {
-    // Google OAuth 2.0 Configuration
-    // Replace with your actual Google Client ID
-    const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
-    const REDIRECT_URI = encodeURIComponent(window.location.origin + '/oauth-callback');
-    const SCOPE = encodeURIComponent('email profile');
-
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${GOOGLE_CLIENT_ID}` +
-        `&redirect_uri=${REDIRECT_URI}` +
-        `&response_type=token` +
-        `&scope=${SCOPE}` +
-        `&prompt=select_account`;
-
-    // For demo purposes, show info message
-    if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
-        alert('Google OAuth Setup Required\n\n' +
-            'To enable Google login:\n' +
-            '1. Go to Google Cloud Console\n' +
-            '2. Create OAuth 2.0 credentials\n' +
-            '3. Replace GOOGLE_CLIENT_ID in login.js\n\n' +
-            'For now, please use email/password login.');
-        return;
+window.loginWithGoogle = async function () {
+    try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+        await handleSocialLogin(user);
+    } catch (error) {
+        console.error("Google Login Error:", error);
+        alert("Google Login Failed: " + error.message);
     }
-
-    // Open OAuth popup
-    const popup = window.open(authUrl, 'Google Login',
-        'width=500,height=600,scrollbars=yes');
-
-    // Listen for OAuth callback
-    window.addEventListener('message', handleOAuthMessage);
 }
 
-function loginWithGithub() {
-    // GitHub OAuth Configuration
-    // Replace with your actual GitHub Client ID
-    const GITHUB_CLIENT_ID = 'YOUR_GITHUB_CLIENT_ID';
-    const REDIRECT_URI = encodeURIComponent(window.location.origin + '/oauth-callback');
-    const SCOPE = encodeURIComponent('user:email');
-
-    const authUrl = `https://github.com/login/oauth/authorize?` +
-        `client_id=${GITHUB_CLIENT_ID}` +
-        `&redirect_uri=${REDIRECT_URI}` +
-        `&scope=${SCOPE}`;
-
-    // For demo purposes, show info message
-    if (GITHUB_CLIENT_ID === 'YOUR_GITHUB_CLIENT_ID') {
-        alert('GitHub OAuth Setup Required\n\n' +
-            'To enable GitHub login:\n' +
-            '1. Go to GitHub Developer Settings\n' +
-            '2. Create a new OAuth App\n' +
-            '3. Replace GITHUB_CLIENT_ID in login.js\n\n' +
-            'For now, please use email/password login.');
-        return;
+window.loginWithGithub = async function () {
+    try {
+        const result = await signInWithPopup(auth, githubProvider);
+        const user = result.user;
+        await handleSocialLogin(user);
+    } catch (error) {
+        console.error("GitHub Login Error:", error);
+        alert("GitHub Login Failed: " + error.message);
     }
-
-    // Open OAuth popup
-    const popup = window.open(authUrl, 'GitHub Login',
-        'width=500,height=600,scrollbars=yes');
-
-    window.addEventListener('message', handleOAuthMessage);
 }
 
-async function handleOAuthMessage(event) {
-    // Security: verify origin
-    if (event.origin !== window.location.origin) return;
+async function handleSocialLogin(firebaseUser) {
+    try {
+        // Prepare data for backend
+        const payload = {
+            email: firebaseUser.email,
+            name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+            avatar: firebaseUser.photoURL
+        };
 
-    const { provider, token, user } = event.data || {};
+        const r = await fetch(`${API_BASE}/social-login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
 
-    if (token && user) {
-        try {
-            // Send to backend for verification/account creation
-            const r = await fetch(`${API_BASE}/login/oauth`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    provider: provider,
-                    token: token,
-                    email: user.email,
-                    name: user.name,
-                    avatar: user.picture || user.avatar_url
-                })
-            });
-
-            const data = await r.json();
-            if (data.error) {
-                alert("OAuth Login Failed: " + data.error);
-            } else {
-                localStorage.setItem("currentUser", JSON.stringify(data));
-                window.location.href = "/chat";
-            }
-        } catch (err) {
-            alert("OAuth login failed: " + err.message);
+        const data = await r.json();
+        if (data.error) {
+            alert("Login Failed: " + data.error);
+        } else {
+            localStorage.setItem("currentUser", JSON.stringify(data));
+            window.location.href = "/chat";
         }
+    } catch (err) {
+        alert("Server Login Failed: " + err.message);
     }
-
-    window.removeEventListener('message', handleOAuthMessage);
 }
+
+// Make globally available for HTML onclick
+window.startQrScanner = startQrScanner;
