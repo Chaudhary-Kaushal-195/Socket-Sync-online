@@ -34,13 +34,60 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ================== APP SETUP ==================
-app = Flask(__name__)
+# ================== APP SETUP ==================
+# Point to frontend folder for static files
+# backend/server.py -> ../frontend
+TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../frontend")
+STATIC_DIR = TEMPLATE_DIR
+
+app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
+
 # Allow CORS from specific origin in production, or * for now if strictly needed
-cors_origin = os.getenv("FRONTEND_URL", "*")
+cors_origin = "*" # Unified deployment: Same origin, but keep * for dev
 print(f"DEBUG: CORS configured for origin: {cors_origin}")
 CORS(app, resources={r"/*": {"origins": cors_origin}})
 
-socketio = SocketIO(app, cors_allowed_origins=cors_origin, async_mode='eventlet')
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+
+# ================== FRONTEND ROUTES ==================
+@app.route("/")
+def index():
+    # serve login.html as the landing page
+    return send_from_directory(os.path.join(TEMPLATE_DIR, "pages"), "login.html")
+
+@app.route("/login")
+def login_page():
+    return send_from_directory(os.path.join(TEMPLATE_DIR, "pages"), "login.html")
+
+@app.route("/signup")
+def signup_page():
+    return send_from_directory(os.path.join(TEMPLATE_DIR, "pages"), "signup.html")
+
+@app.route("/chat")
+def chat():
+    return send_from_directory(os.path.join(TEMPLATE_DIR, "pages"), "chat.html")
+
+@app.route("/oauth-callback")
+def oauth_callback():
+    return send_from_directory(os.path.join(TEMPLATE_DIR, "pages"), "oauth-callback.html")
+
+# Serve Static Assets (CSS, JS, Material, etc.)
+# Since files are in ../frontend/css, ../frontend/js
+@app.route("/css/<path:filename>")
+def serve_css(filename):
+    return send_from_directory(os.path.join(STATIC_DIR, "css"), filename)
+
+@app.route("/js/<path:filename>")
+def serve_js(filename):
+    return send_from_directory(os.path.join(STATIC_DIR, "js"), filename)
+
+@app.route("/material/<path:filename>")
+def serve_material(filename):
+    return send_from_directory(os.path.join(STATIC_DIR, "material"), filename)
+    
+@app.route("/pages/<path:filename>")
+def serve_pages(filename):
+    return send_from_directory(os.path.join(STATIC_DIR, "pages"), filename)
 
 # ================== DATABASE ==================
 db = Database()
@@ -328,12 +375,21 @@ def handle_message(data):
         "timestamp": now
     }
     
+    print(f"DEBUG: Processing message from {sender} to {receiver}")
+
     # Check Block
     if db.is_blocked(sender, receiver):
+        print(f"DEBUG: Blocked message attempt")
         emit("error", {"message": "Message not sent. You are blocked or have blocked this user."}, room=room)
         return
 
     new_id = db.save_message(msg_data)
+    print(f"DEBUG: Message saved with ID: {new_id}")
+    
+    if not new_id:
+        print("CRITICAL: save_message returned None!")
+        emit("error", {"message": "Failed to save message"}, room=room)
+        return
 
     emit(
         "receive_message",
@@ -370,6 +426,7 @@ def handle_message(data):
     )
     
     # Emit back to sender to update their temporary message with the real ID
+    print(f"DEBUG: Emitting confirmation to sender for temp_id: {data.get('temp_id')}")
     emit("message_sent_confirm", {
         "temp_id": data.get("temp_id"), 
         "id": new_id,

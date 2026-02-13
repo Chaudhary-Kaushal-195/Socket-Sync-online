@@ -1,4 +1,5 @@
-const API_BASE = "http://127.0.0.1:5000";
+// Unified Deployment: Use relative paths
+const API_BASE = "";
 
 // ================= VALIDATION RULES =================
 const ValidationRules = {

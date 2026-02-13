@@ -1,7 +1,11 @@
 // ================= SOCKET =================
-const API_BASE = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost" || window.location.protocol === "file:")
-    ? "http://127.0.0.1:5000"
-    : "https://socket-sync-backend.onrender.com"; // Render Backend URL
+// ================= SOCKET =================
+// Unified: Backend serves Frontend, so API Base is just the origin
+// However, if we run strict separate dev (live server), we might need localhost:5000 explicitly
+const API_BASE = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") && window.location.port !== "5000"
+    ? "http://127.0.0.1:5000" // If running via Live Server
+    : window.location.origin; // If served by Flask (Production OR Local Flask)
+
 const socket = io(API_BASE);
 
 // ================= GLOBALS =================
