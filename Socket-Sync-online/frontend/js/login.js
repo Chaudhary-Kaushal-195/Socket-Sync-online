@@ -137,7 +137,7 @@ async function onScanSuccess(decodedText, decodedResult) {
                 window.location.reload();
             } else {
                 localStorage.setItem("currentUser", JSON.stringify(data));
-                window.location.href = "chat.html";
+                window.location.href = "/chat";
             }
         }
     } catch (e) {
@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert(data.error);
                 } else {
                     localStorage.setItem("currentUser", JSON.stringify(data));
-                    window.location.href = "chat.html";
+                    window.location.href = "/chat";
                 }
             } catch (err) {
                 alert("Login failed: " + err.message);
@@ -221,7 +221,7 @@ function loginWithGoogle() {
     // Google OAuth 2.0 Configuration
     // Replace with your actual Google Client ID
     const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
-    const REDIRECT_URI = encodeURIComponent(window.location.origin + '/frontend/pages/oauth-callback.html');
+    const REDIRECT_URI = encodeURIComponent(window.location.origin + '/oauth-callback');
     const SCOPE = encodeURIComponent('email profile');
 
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
@@ -254,7 +254,7 @@ function loginWithGithub() {
     // GitHub OAuth Configuration
     // Replace with your actual GitHub Client ID
     const GITHUB_CLIENT_ID = 'YOUR_GITHUB_CLIENT_ID';
-    const REDIRECT_URI = encodeURIComponent(window.location.origin + '/frontend/pages/oauth-callback.html');
+    const REDIRECT_URI = encodeURIComponent(window.location.origin + '/oauth-callback');
     const SCOPE = encodeURIComponent('user:email');
 
     const authUrl = `https://github.com/login/oauth/authorize?` +
@@ -306,7 +306,7 @@ async function handleOAuthMessage(event) {
                 alert("OAuth Login Failed: " + data.error);
             } else {
                 localStorage.setItem("currentUser", JSON.stringify(data));
-                window.location.href = "chat.html";
+                window.location.href = "/chat";
             }
         } catch (err) {
             alert("OAuth login failed: " + err.message);

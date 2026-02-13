@@ -24,7 +24,7 @@ if (storedUser) {
 
     loadUsers();
 } else {
-    window.location.href = "login.html";
+    window.location.href = "/login";
 }
 
 // Setup Socket Listeners (from socket-client.js)
@@ -33,7 +33,7 @@ setupSocketListeners(socket);
 function logout() {
     localStorage.removeItem("currentUser");
     // Also clear queue? Maybe not if we want persistence.
-    window.location.href = "login.html";
+    window.location.href = "/login";
 }
 
 // ================= CONTACTS LOGIC =================

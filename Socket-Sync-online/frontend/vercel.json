@@ -15,6 +15,10 @@
         {
             "source": "/chat",
             "destination": "/pages/chat.html"
+        },
+        {
+            "source": "/oauth-callback",
+            "destination": "/pages/oauth-callback.html"
         }
     ]
 }

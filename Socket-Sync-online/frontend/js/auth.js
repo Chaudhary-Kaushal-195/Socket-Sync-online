@@ -2,7 +2,7 @@
 window.onload = () => {
     const u = localStorage.getItem("currentUser");
     if (!u) {
-        window.location.href = "login.html";
+        window.location.href = "/login";
         return;
     }
 
@@ -29,7 +29,7 @@ window.onload = () => {
 function logout() {
     localStorage.removeItem("currentUser");
     // Also clear queue? Maybe not if we want persistence.
-    window.location.href = "login.html";
+    window.location.href = "/login";
 }
 
 // ================= LOAD USERS (CHAT LIST) =================
