@@ -171,6 +171,7 @@
     word-break: break-word;
     position: relative;
     z-index: 2;
+    white-space: pre-wrap;
 }
 
 /* For TEXT ONLY messages, make content inline */

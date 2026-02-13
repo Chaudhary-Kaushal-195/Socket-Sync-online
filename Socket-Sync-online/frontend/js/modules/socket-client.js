@@ -4,7 +4,13 @@
 function setupSocketListeners(socket) {
 
     // Connect / Queue Flush
+    socket.on("connect_error", (err) => {
+        console.error("SOCKET CONNECT ERROR:", err.message, err);
+    });
+
     socket.on("connect", () => {
+        console.log("SOCKET CONNECTED:", socket.id);
+        const user = JSON.parse(localStorage.getItem("user"));
         if (typeof msgQueue !== 'undefined' && msgQueue.length > 0) {
             console.log(`Flushing ${msgQueue.length} messages`);
             msgQueue.forEach(payload => {
@@ -48,6 +54,7 @@ function setupSocketListeners(socket) {
 
     // Receive Message
     socket.on("receive_message", m => {
+        console.log("RECEIVED MSG:", m, "CURRENT USER:", currentUser.user_id);
         const chatPartner = m.from;
 
         if (!messageCache.has(chatPartner)) {

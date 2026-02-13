@@ -1,7 +1,20 @@
+import eventlet
+eventlet.monkey_patch()
+
 import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit, join_room
+# ... imports ...
+
+# ... inside app setup ...
+app = Flask(__name__)
+# Allow CORS from specific origin in production, or * for now if strictly needed
+cors_origin = "*" # FORCE WILDCARD FOR DEBUGGING
+print(f"DEBUG: CORS configured for origin: {cors_origin}")
+CORS(app, resources={r"/*": {"origins": cors_origin}})
+
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -24,6 +37,7 @@ load_dotenv()
 app = Flask(__name__)
 # Allow CORS from specific origin in production, or * for now if strictly needed
 cors_origin = os.getenv("FRONTEND_URL", "*")
+print(f"DEBUG: CORS configured for origin: {cors_origin}")
 CORS(app, resources={r"/*": {"origins": cors_origin}})
 
 socketio = SocketIO(app, cors_allowed_origins=cors_origin, async_mode='eventlet')
