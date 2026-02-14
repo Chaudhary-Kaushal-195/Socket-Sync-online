@@ -60,7 +60,7 @@ function showMsg(msg) {
         const escapedMsg = safeMsg.replace(/'/g, "\\'").replace(/\n/g, "\\n").replace(/\r/g, "");
 
         div.setAttribute("oncontextmenu",
-            `handleCtxMenu(event, ${msg.id}, '${escapedMsg}', '${safeUrl}', '${safeType}')`
+            `handleCtxMenu(event, '${msg.id}', '${escapedMsg}', '${safeUrl}', '${safeType}')`
         );
 
         let contentHtml = "";

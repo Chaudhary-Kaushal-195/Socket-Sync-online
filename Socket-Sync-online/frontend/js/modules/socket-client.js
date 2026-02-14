@@ -37,7 +37,8 @@ function setupSocketListeners(socket) {
             // Update context menu handler with real ID
             let oldAttr = el.getAttribute("oncontextmenu");
             if (oldAttr) {
-                let newAttr = oldAttr.replace(/handleCtxMenu\(event,\s*\d+/, `handleCtxMenu(event, ${realId}`);
+                // Regex: match handleCtxMenu(event, optionally_quoted_digits
+                let newAttr = oldAttr.replace(/handleCtxMenu\(event,\s*['"]?(\d+)['"]?/, `handleCtxMenu(event, '${realId}'`);
                 el.setAttribute("oncontextmenu", newAttr);
             }
         }
