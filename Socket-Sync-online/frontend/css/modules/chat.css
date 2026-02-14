@@ -37,10 +37,8 @@
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-bottom: var(--glass-border);
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    /* Flatten left side */
-    margin: 12px 12px 0 0;
-    /* No left margin */
+    border-radius: var(--radius-md);
+    margin: 12px 12px 0 12px;
     display: flex;
     align-items: center;
     gap: 16px;
@@ -424,10 +422,8 @@ body.light-mode .msg-tick i.read {
     gap: 12px;
     align-items: center;
     border-top: var(--glass-border);
-    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
-    /* Flatten left side */
-    margin: 0 12px 12px 0;
-    /* No left margin */
+    border-radius: var(--radius-lg);
+    margin: 0 12px 12px 12px;
     box-shadow: var(--shadow-md);
     position: relative;
     z-index: 10;
