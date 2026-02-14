@@ -411,8 +411,6 @@ body.light-mode .msg-tick i.read {
 /* ========== INPUT AREA ========== */
 .input-area {
     padding: 14px 20px;
-    /* Ensure safe area for mobile home bars */
-    padding-bottom: calc(14px + env(safe-area-inset-bottom));
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
@@ -422,8 +420,6 @@ body.light-mode .msg-tick i.read {
     border-top: var(--glass-border);
     border-radius: var(--radius-lg);
     margin: 0 12px 12px 12px;
-    /* Ensure margin respects safe area too if needed, but padding usually better handled inside or on container */
-    margin-bottom: max(12px, env(safe-area-inset-bottom));
     box-shadow: var(--shadow-md);
     position: relative;
     z-index: 10;
