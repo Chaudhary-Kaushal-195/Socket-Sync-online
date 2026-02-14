@@ -224,8 +224,10 @@
 }
 
 /* Deleted Message Styling */
+/* Deleted Message Styling */
 .msg.deleted {
-    padding: 8px 14px;
+    padding: 4px 8px;
+    /* Reduced padding as requested */
     font-size: 0.9rem;
     font-style: italic;
     color: rgba(255, 255, 255, 0.6) !important;
