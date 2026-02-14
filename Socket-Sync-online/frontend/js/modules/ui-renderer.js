@@ -79,6 +79,7 @@ function showMsg(msg) {
         }
 
         div.className = `msg ${isMe ? "sent" : "recv"}`;
+        if (isRevoked) div.classList.add("deleted");
 
         // Only add media classes if NOT revoked
         if (!isRevoked && msg.file_url) {
@@ -114,7 +115,7 @@ function showMsg(msg) {
 
         if (isRevoked) {
             // Revoked Message Style
-            contentHtml += `<div class="msg-content" style="color:var(--text-secondary); font-style:italic;">
+            contentHtml += `<div class="msg-content">
                 <i class="fas fa-ban"></i> ${safeMsg}
             </div>`;
         }

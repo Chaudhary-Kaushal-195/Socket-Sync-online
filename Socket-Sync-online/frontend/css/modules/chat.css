@@ -223,6 +223,28 @@
     box-shadow: 0 0 20px rgba(99, 102, 241, 0.3) !important;
 }
 
+/* Deleted Message Styling */
+.msg.deleted {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.6) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: none !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 0;
+}
+
+/* Light Mode Deleted */
+body.light-mode .msg.deleted {
+    color: rgba(0, 0, 0, 0.5) !important;
+    background: rgba(0, 0, 0, 0.05) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
 /* ========== MEDIA MESSAGES ========== */
 .msg.has-media {
     padding: 8px;
