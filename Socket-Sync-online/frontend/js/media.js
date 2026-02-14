@@ -473,7 +473,7 @@ function stopTimer() {
 
 function formatTime12(isoString) {
     if (!isoString) return "";
-    return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
 }
 
 // Expose functions to window for HTML onclick handlers

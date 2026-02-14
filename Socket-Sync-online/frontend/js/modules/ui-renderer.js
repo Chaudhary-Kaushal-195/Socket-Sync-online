@@ -134,7 +134,7 @@ function showMsg(msg) {
             }
         }
 
-        const timeStr = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const timeStr = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
 
         let statusHtml = "";
         if (isMe) {
