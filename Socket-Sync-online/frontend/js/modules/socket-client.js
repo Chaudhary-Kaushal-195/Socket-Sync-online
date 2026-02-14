@@ -173,6 +173,11 @@ function handleIncomingMessage(msg) {
             markAsRead(normalizedMsg.id);
         }
     } else {
+        // Mark as DELIVERED if not read yet
+        if (normalizedMsg.from !== currentUser.user_id && normalizedMsg.status === 'sent') {
+            markAsDelivered(normalizedMsg.id);
+        }
+
         // Update badge
         const chatItem = document.getElementById(`chat-item-${partnerId}`);
         if (chatItem) {
@@ -237,6 +242,17 @@ function markAsRead(msgId) {
     supabase.from('messages').update({ status: 'read' }).eq('id', msgId).then(res => {
         // console.log("Marked as read", res);
     });
+}
+
+function markAsDelivered(msgId) {
+    if (!currentUser) return;
+    supabase.from('messages')
+        .update({ status: 'delivered' })
+        .eq('id', msgId)
+        .eq('status', 'sent')
+        .then(res => {
+            // console.log("Marked as delivered", res);
+        });
 }
 
 function playNotificationSound() {
