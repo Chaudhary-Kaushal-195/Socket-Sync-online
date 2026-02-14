@@ -116,7 +116,7 @@ function showMsg(msg) {
         if (isRevoked) {
             // Revoked Message Style
             contentHtml += `<div class="msg-content">
-                <i class="fas fa-ban"></i> This message was deleted
+                This message was deleted
             </div>`;
         }
         else {
