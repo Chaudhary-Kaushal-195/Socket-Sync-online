@@ -229,8 +229,8 @@ async function send() {
     // Reset Input
     msgInput.value = "";
     selectedFiles = [];
-    document.getElementById("filePreviewContainer").classList.add("hidden");
-    document.getElementById("filePreviewContainer").innerHTML = "";
+    document.getElementById("filePreview").classList.add("hidden");
+    document.getElementById("previewList").innerHTML = "";
 
     // 3. Send to Supabase
     try {
@@ -708,7 +708,7 @@ async function blockUser() {
             // Unblock
             await supabase.from('blocked_users').delete().eq('blocker_id', currentUser.user_id).eq('blocked_id', currentChat);
             showAlert("User unblocked", "success");
-            document.getElementById("blockUserBtn").innerHTML = '<i class="fas fa-ban"></i> Block User';
+            document.getElementById("blockBtn").innerHTML = '<i class="fas fa-ban"></i> Block User';
         } else {
             // Block
             await supabase.from('blocked_users').insert({
@@ -716,7 +716,7 @@ async function blockUser() {
                 blocked_id: currentChat
             });
             showAlert("User blocked", "warning");
-            document.getElementById("blockUserBtn").innerHTML = '<i class="fas fa-check-circle"></i> Unblock User';
+            document.getElementById("blockBtn").innerHTML = '<i class="fas fa-check-circle"></i> Unblock User';
         }
 
     } catch (e) {
@@ -735,7 +735,7 @@ async function checkBlockStatus() {
             .eq('blocked_id', currentChat)
             .single();
 
-        const btn = document.getElementById("blockUserBtn");
+        const btn = document.getElementById("blockBtn");
         if (btn) {
             if (data) {
                 btn.innerHTML = '<i class="fas fa-check-circle"></i> Unblock User';
