@@ -383,9 +383,11 @@ async function signup() {
 }
 
 // ================= SOCIAL SIGNUP =================
-import { auth, googleProvider, githubProvider, signInWithPopup } from './firebase-config.js';
+// import { auth, googleProvider, githubProvider, signInWithPopup } from './firebase-config.js';
 
 window.signupWithGoogle = async function () {
+    alert("Social login is currently being migrated to Supabase. This feature will be available soon.");
+    /*
     try {
         const result = await signInWithPopup(auth, googleProvider);
         await handleSocialSignup(result.user);
@@ -393,9 +395,12 @@ window.signupWithGoogle = async function () {
         console.error("Google Signup Error:", error);
         alert("Google Signup Failed: " + error.message);
     }
+    */
 }
 
 window.signupWithGithub = async function () {
+    alert("Social login is currently being migrated to Supabase. This feature will be available soon.");
+    /*
     try {
         const result = await signInWithPopup(auth, githubProvider);
         await handleSocialSignup(result.user);
@@ -403,8 +408,10 @@ window.signupWithGithub = async function () {
         console.error("GitHub Signup Error:", error);
         alert("GitHub Signup Failed: " + error.message);
     }
+    */
 }
 
+/*
 async function handleSocialSignup(firebaseUser) {
     try {
         const payload = {
@@ -430,6 +437,7 @@ async function handleSocialSignup(firebaseUser) {
         alert("Server Signup Failed: " + err.message);
     }
 }
+*/
 
 // Attach globals for HTML
 window.signup = signup;
