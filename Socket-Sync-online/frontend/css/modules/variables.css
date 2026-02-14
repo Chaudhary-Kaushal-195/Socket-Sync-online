@@ -149,3 +149,11 @@ body.light-mode {
    --gradient-glow: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
    --gradient-shine: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.5) 50%, transparent 70%);
 }
+
+/* ========== MOBILE RESPONSIVE VARIABLES ========== */
+@media (max-width: 768px) {
+   :root {
+      --header-height: 60px;
+      /* Compact header for mobile */
+   }
+}
