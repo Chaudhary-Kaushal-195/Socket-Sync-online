@@ -645,7 +645,16 @@ body.light-mode .msg-tick i.read {
 
 @media (max-width: 768px) {
     .input-area {
-        padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-        margin-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+        padding: 10px 12px;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+        margin: 0 8px 10px 8px;
+        /* Reduce margin */
+        margin-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+        gap: 8px;
+    }
+
+    .btn-send {
+        padding: 10px 16px !important;
+        /* Smaller button */
     }
 }
