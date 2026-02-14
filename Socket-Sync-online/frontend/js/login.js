@@ -196,7 +196,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 // Supabase Login
-                const { data, error } = await supabase.auth.signInWithPassword({
+                if (!window.supabase) {
+                    alert("System Error: Supabase client not initialized. Please refresh.");
+                    return;
+                }
+
+                const { data, error } = await window.supabase.auth.signInWithPassword({
                     email: email,
                     password: pwd
                 });
