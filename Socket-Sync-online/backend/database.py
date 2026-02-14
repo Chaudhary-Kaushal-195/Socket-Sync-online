@@ -1,12 +1,27 @@
 import os
-import firebase_admin
-from firebase_admin import credentials, db
 from datetime import datetime
 import json
 import time
 
+# Try to import firebase_admin, but handle failure for migration
+try:
+    import firebase_admin
+    from firebase_admin import credentials, db
+    FIREBASE_AVAILABLE = True
+except ImportError:
+    FIREBASE_AVAILABLE = False
+    print("WARNING: firebase-admin not installed. Backend is in DEPRECATED mode.")
+
 class Database:
     def __init__(self):
+        self.ref = None
+        self.users_ref = None
+        self.chats_ref = None
+        
+        if not FIREBASE_AVAILABLE:
+            print("Database initialized in dummy mode (Supabase Migration).")
+            return
+
         # Check if already initialized to avoid "app already exists" error
         if not firebase_admin._apps:
             # PROD: Load from Env Var
@@ -24,7 +39,6 @@ class Database:
                     print("DEBUG: Firebase Initialized Successfully via Env Var")
                 except Exception as e:
                     print(f"CRITICAL: Failed to init Firebase from Env Var: {e}")
-                    if cred_json: print(f"DEBUG VAR CONTENT (First 50): {cred_json[:50]}")
             else:
                 # LOCAL: Try to load from local file if env var not set
                 try:
@@ -52,27 +66,24 @@ class Database:
         return str(key).replace('.', ',')
 
     def _get_pair_id(self, u1, u2):
-        # Sanitize before creating pair ID to ensure no dots in path
         s1 = self._sanitize(u1)
         s2 = self._sanitize(u2)
         return "-".join(sorted([s1, s2]))
 
     def get_user_by_id(self, user_id):
+        if not self.users_ref: return None
         try:
             user = self.users_ref.child(self._sanitize(user_id)).get()
             return user
         except Exception as e:
-            print(f"Error getting user: {e}")
             return None
 
     def create_user(self, user_data):
+        if not self.users_ref: return False, "Backend Deprecated"
         try:
-            # Check if exists (using sanitized ID for lookup)
-            # user_data["userId"] is the original email (with dot)
             if self.get_user_by_id(user_data["userId"]):
                 return False, "User already exists"
                 
-            # Use sanitized ID for the KEY, but store original ID in the DATA
             self.users_ref.child(self._sanitize(user_data["userId"])).set({
                 "user_id": user_data["userId"],
                 "name": user_data["name"],
@@ -88,38 +99,38 @@ class Database:
             return False, str(e)
 
     def update_password(self, user_id, new_hash):
-        try:
-            self.users_ref.child(self._sanitize(user_id)).update({"password": new_hash})
-        except Exception as e:
-            print(f"Error updating password: {e}")
+        if self.users_ref:
+            try:
+                self.users_ref.child(self._sanitize(user_id)).update({"password": new_hash})
+            except: pass
 
     def get_qr_token(self, user_id):
         user = self.get_user_by_id(user_id)
         return user.get("qr_token") if user else None
 
     def update_qr_token(self, user_id, token):
-        try:
-            self.users_ref.child(self._sanitize(user_id)).update({"qr_token": token})
-        except:
-            pass
+        if self.users_ref:
+            try:
+                self.users_ref.child(self._sanitize(user_id)).update({"qr_token": token})
+            except: pass
 
     def get_user_by_qr_token(self, token):
+        if not self.users_ref: return None
         try:
             users = self.users_ref.order_by_child('qr_token').equal_to(token).limit_to_first(1).get()
-            for k, v in users.items():
-                return v
+            for k, v in users.items(): return v
             return None
-        except:
-            return None
+        except: return None
 
     def update_avatar(self, user_id, avatar_url):
+        if not self.users_ref: return False
         try:
             self.users_ref.child(self._sanitize(user_id)).update({"avatar": avatar_url})
             return True
-        except:
-            return False
+        except: return False
 
     def get_all_users(self):
+        if not self.users_ref: return []
         try:
             users_dict = self.users_ref.get()
             if not users_dict: return []
@@ -132,29 +143,26 @@ class Database:
                     "avatar": data.get("avatar")
                 })
             return users
-        except:
-            return []
+        except: return []
 
     def save_message(self, data):
+        if not self.chats_ref: return None
         try:
             sender = data["sender"]
             receiver = data["receiver"]
-            pair_id = self._get_pair_id(sender, receiver) # Handles sanitization
+            pair_id = self._get_pair_id(sender, receiver)
             
             data["timestamp"] = datetime.now().isoformat()
             data["status"] = "sent"
             data["is_revoked"] = False
             
             new_ref = self.chats_ref.child(pair_id).child('messages').push(data)
-            
             self.ref.child('message_index').child(new_ref.key).set({"pair": pair_id})
-            
             return new_ref.key
-        except Exception as e:
-            print(f"Error saving message: {e}")
-            return None
+        except Exception as e: return None
 
     def get_message_by_id(self, msg_id):
+        if not self.ref: return None
         try:
             idx = self.ref.child('message_index').child(msg_id).get()
             if idx:
@@ -165,25 +173,10 @@ class Database:
                     msg['pair_id'] = pair_id 
                     return msg
             return None
-        except:
-            return None
-
-    def get_message_context(self, msg_id):
-        try:
-             idx = self.ref.child('message_index').child(msg_id).get()
-             if idx:
-                 return self.chats_ref.child(idx['pair']).child('messages').child(msg_id).get(), idx['pair']
-             return None, None
-        except:
-            return None, None
-
-    def save_message_index(self, msg_id, pair_id):
-        try:
-            self.ref.child('message_index').child(msg_id).set({"pair": pair_id})
-        except:
-            pass
+        except: return None
 
     def get_messages_between(self, u1, u2):
+        if not self.chats_ref: return []
         try:
             pair_id = self._get_pair_id(u1, u2)
             msgs_dict = self.chats_ref.child(pair_id).child('messages').order_by_key().limit_to_last(100).get()
@@ -202,13 +195,11 @@ class Database:
                      m['file_type'] = None
                 
                 all_msgs.append(m)
-            
             return all_msgs
-        except Exception as e:
-            print(f"Error fetching messages: {e}")
-            return []
+        except: return []
 
     def delete_message(self, msg_id):
+        if not self.chats_ref: return False
         try:
             msg = self.get_message_by_id(msg_id)
             if msg:
@@ -222,10 +213,10 @@ class Database:
                     })
                      return True
             return False
-        except:
-            return False
+        except: return False
 
     def delete_message_for_user(self, msg_id, user_id):
+        if not self.chats_ref: return False
         try:
             msg = self.get_message_by_id(msg_id)
             if not msg: return False
@@ -241,18 +232,16 @@ class Database:
                 self.chats_ref.child(pair_id).child('messages').child(msg_id).update(updates)
                 return True
             return False
-        except:
-            return False
+        except: return False
 
     def bulk_delete_messages(self, msg_ids):
-        for mid in msg_ids:
-            self.delete_message(mid)
+        for mid in msg_ids: self.delete_message(mid)
 
     def bulk_delete_message_for_user(self, msg_ids, user_id):
-        for mid in msg_ids:
-            self.delete_message_for_user(mid, user_id)
+        for mid in msg_ids: self.delete_message_for_user(mid, user_id)
 
     def mark_messages_read(self, sender, receiver):
+        if not self.chats_ref: return 0
         try:
             pair_id = self._get_pair_id(sender, receiver)
             msgs = self.chats_ref.child(pair_id).child('messages').order_by_child('status').equal_to('sent').get()
@@ -267,42 +256,24 @@ class Database:
                 
                 if updates:
                     self.chats_ref.child(pair_id).child('messages').update(updates)
-            
             return count
-        except:
-            return 0
+        except: return 0
 
     def mark_message_delivered(self, msg_id):
+        if not self.chats_ref: return
         try:
             msg = self.get_message_by_id(msg_id)
             if msg:
                 pair_id = msg['pair_id']
                 self.chats_ref.child(pair_id).child('messages').child(msg_id).update({"status": "delivered"})
-        except:
-            pass
+        except: pass
 
     def mark_offline_messages_delivered(self, user_id):
-        try:
-            # 1. We need to find all chats where this user is a participant
-            # THIS IS EXPENSIVE IN NO-SQL without an index.
-            # But we can look at user's chat list maybe?
-            # Or simpler: Query all chats? No, that's too much.
-            
-            # Better approach enabled by our structure:
-            # We don't easily know WHICH chats have offline messages.
-            # But the client knows which chats it's in.
-            # For now, let's just return [] or do a best-effort if we had an "undelivered" index.
-            # Since we don't have that index yet, we'll skip this optimization for now 
-            # and rely on the client emitting 'read' receipt when they open a chat.
-            # Actually, the requirement is "mark offline messages delivered".
-            # To do this efficiently, we'd need a queue. 
-            # Let's placeholder it as a TODO or simple scan if user has few chats.
-            return []
-        except:
-            return []
+        return []
 
     # Contacts
     def add_contact(self, user_id, contact_id):
+        if not self.users_ref: return False, "Backend Deprecated"
         try:
             if not self.get_user_by_id(contact_id):
                 return False, "User not found"
@@ -312,17 +283,18 @@ class Database:
                 "added_at": str(datetime.now())
             })
             return True, None
-        except Exception as e:
-            return False, str(e)
+        except Exception as e: return False, str(e)
 
     def remove_contact(self, user_id, contact_id):
-        try:
-            self.users_ref.child(self._sanitize(user_id)).child('contacts').child(self._sanitize(contact_id)).delete()
-            return True
-        except:
-            return False
+        if self.users_ref:
+            try:
+                self.users_ref.child(self._sanitize(user_id)).child('contacts').child(self._sanitize(contact_id)).delete()
+                return True
+            except: return False
+        return False
 
     def get_contacts(self, user_id):
+        if not self.users_ref: return []
         try:
             c_dict = self.users_ref.child(self._sanitize(user_id)).child('contacts').get()
             contacts = []
@@ -338,16 +310,14 @@ class Database:
                                 "avatar": u["avatar"]
                             })
             return contacts
-        except:
-            return []
+        except: return []
 
     def get_chat_list(self, user_id):
-        # Enhance this to include last message and unread count if possible
-        # For now, just return contacts
         return self.get_contacts(user_id)
 
     # Block
     def toggle_block(self, blocker, blocked):
+        if not self.users_ref: return False
         try:
             ref = self.users_ref.child(self._sanitize(blocker)).child('blocked').child(self._sanitize(blocked))
             if ref.get():
@@ -356,50 +326,37 @@ class Database:
             else:
                 ref.set(True)
                 return True
-        except:
-            return False
+        except: return False
 
     def is_blocked(self, u1, u2):
+        if not self.users_ref: return False
         try:
             b1 = self.users_ref.child(self._sanitize(u1)).child('blocked').child(self._sanitize(u2)).get()
             b2 = self.users_ref.child(self._sanitize(u2)).child('blocked').child(self._sanitize(u1)).get()
             return b1 is not None or b2 is not None
-        except:
-            return False
+        except: return False
 
     def get_block_state(self, me, other):
+        if not self.users_ref: return "none"
         try:
             if self.users_ref.child(self._sanitize(me)).child('blocked').child(self._sanitize(other)).get():
                 return "blocked_by_me"
             if self.users_ref.child(self._sanitize(other)).child('blocked').child(self._sanitize(me)).get():
                 return "blocked_by_other"
             return "none"
-        except:
-            return "none"
+        except: return "none"
 
     def clear_chat(self, u1, u2):
+        if not self.chats_ref: return False
         try:
             pair_id = self._get_pair_id(u1, u2)
-            # Soft delete? Or hard delete?
-            # "Clear chat" usually means "Clear for ME".
-            # But since we use a shared history, we can't delete shared messages without affecting the other.
-            # So, we should flag all current messages as "hidden_for_u1".
-            # But our current schema doesn't support "hidden_before_timestamp".
-            # Simplification: Delete ALL messages if local dev, or add "cleared_at" to user profile.
-            
-            # Let's implement "cleared_at" timestamp for the user-pair relationship.
-            # When fetching messages, filter out those before "cleared_at".
-            # But `get_messages_between` needs to be updated. 
-            # For now, let's just do a hard delete of the node if it's a student project request "Check for bugs/glitches".
-            # If the user requested "Clear Chat" in the UI, they might expect it to disappear.
-            self.chats_ref.child(pair_id).delete() # WARNING: Deletes for BOTH.
+            self.chats_ref.child(pair_id).delete()
             return True
-        except:
-            return False
+        except: return False
 
     def update_login_streak(self, user_id):
+        if not self.users_ref: return
         try:
-            # 1. Get last login
             u = self.get_user_by_id(user_id)
             if not u: return
             
@@ -416,93 +373,39 @@ class Database:
                 today_date = now.date()
                 
                 delta = (today_date - last_date).days
-                
-                if delta == 1:
-                    new_streak += 1
-                elif delta > 1:
-                    new_streak = 1 # Reset
-                # If delta == 0, same day, do nothing
-            else:
-                new_streak = 1
+                if delta == 1: new_streak += 1
+                elif delta > 1: new_streak = 1
+            else: new_streak = 1
                 
             self.users_ref.child(self._sanitize(user_id)).update({
                 "last_login": str(now),
                 "login_streak": new_streak
             })
-        except Exception as e:
-            print(f"Streak update error: {e}")
+        except: pass
 
     def get_profile_stats(self, user_id):
+        if not self.users_ref: return {}
         try:
             u = self.get_user_by_id(user_id)
             if not u: return {}
-            
             contacts = self.get_contacts(user_id)
-            
             return {
                 "streak": u.get("login_streak", 0),
                 "contacts": len(contacts),
                 "joined": u.get("created_at", "Unknown").split(" ")[0]
             }
-        except:
-            return {}
+        except: return {}
 
     def get_user_message_counts(self):
-        try:
-            # Heavy operation: Fetch all chats
-            all_chats = self.chats_ref.get()
-            if not all_chats: return {}
-            
-            counts = {}
-            for pair_id, data in all_chats.items():
-                if "messages" in data:
-                    for mid, msg in data["messages"].items():
-                        sender = msg.get("sender")
-                        if sender:
-                            # Use original ID? 'sender' in msg is original ID.
-                            # We might need to map it to a Name if we want names.
-                            # But the key will be the User ID (email).
-                            counts[sender] = counts.get(sender, 0) + 1
-            
-            # Map emails to Names?
-            final_counts = {}
-            all_users = self.get_all_users()
-            user_map = {u['user_id']: u['name'] for u in all_users}
-            
-            for uid, count in counts.items():
-                name = user_map.get(uid, uid) # Fallback to ID
-                final_counts[name] = count
-                
-            return final_counts
-        except Exception as e:
-            print(f"Stats Error: {e}")
-            return {}
+        return {}
 
     def delete_user_data(self, user_id):
-        try:
-            # 1. Delete user node
-            self.users_ref.child(self._sanitize(user_id)).delete()
-            return True
-        except:
-            return False
+        if self.users_ref:
+            try:
+                self.users_ref.child(self._sanitize(user_id)).delete()
+                return True
+            except: pass
+        return False
 
     def get_chat_media(self, u1, partner_id):
-        try:
-            pair_id = self._get_pair_id(u1, partner_id)
-            msgs = self.chats_ref.child(pair_id).child('messages').get()
-            
-            media = []
-            if msgs:
-                for mid, m in msgs.items():
-                    if m.get('file_url') and not m.get('is_revoked'):
-                        media.append({
-                            "id": mid,
-                            "url": m['file_url'],
-                            "type": m.get('file_type', 'unknown'),
-                            "timestamp": m.get('timestamp')
-                        })
-            # Sort recent first
-            media.sort(key=lambda x: x['timestamp'], reverse=True)
-            return media
-        except:
-            return []
+        return []

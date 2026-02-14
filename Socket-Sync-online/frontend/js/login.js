@@ -249,56 +249,22 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ================= SOCIAL LOGIN =================
-import { auth, googleProvider, githubProvider, signInWithPopup } from './firebase-config.js';
+// ================= SOCIAL LOGIN =================
+// import { auth, googleProvider, githubProvider, signInWithPopup } from './firebase-config.js';
 
 window.loginWithGoogle = async function () {
-    try {
-        const result = await signInWithPopup(auth, googleProvider);
-        const user = result.user;
-        await handleSocialLogin(user);
-    } catch (error) {
-        console.error("Google Login Error:", error);
-        alert("Google Login Failed: " + error.message);
-    }
+    alert("Social login is currently being migrated to Supabase. This feature will be available soon.");
 }
 
 window.loginWithGithub = async function () {
-    try {
-        const result = await signInWithPopup(auth, githubProvider);
-        const user = result.user;
-        await handleSocialLogin(user);
-    } catch (error) {
-        console.error("GitHub Login Error:", error);
-        alert("GitHub Login Failed: " + error.message);
-    }
+    alert("Social login is currently being migrated to Supabase. This feature will be available soon.");
 }
 
+/*
 async function handleSocialLogin(firebaseUser) {
-    try {
-        // Prepare data for backend
-        const payload = {
-            email: firebaseUser.email,
-            name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
-            avatar: firebaseUser.photoURL
-        };
-
-        const r = await fetch(`${API_BASE}/social-login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        const data = await r.json();
-        if (data.error) {
-            alert("Login Failed: " + data.error);
-        } else {
-            localStorage.setItem("currentUser", JSON.stringify(data));
-            window.location.href = "/chat";
-        }
-    } catch (err) {
-        alert("Server Login Failed: " + err.message);
-    }
+    // Legacy Firebase Code Removed
 }
+*/
 
 // Make globally available for HTML onclick
 window.startQrScanner = startQrScanner;

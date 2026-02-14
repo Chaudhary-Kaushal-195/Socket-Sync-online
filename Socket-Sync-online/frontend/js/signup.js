@@ -390,61 +390,14 @@ async function signup() {
 }
 
 // ================= SOCIAL SIGNUP =================
-// import { auth, googleProvider, githubProvider, signInWithPopup } from './firebase-config.js';
 
 window.signupWithGoogle = async function () {
     alert("Social login is currently being migrated to Supabase. This feature will be available soon.");
-    /*
-    try {
-        const result = await signInWithPopup(auth, googleProvider);
-        await handleSocialSignup(result.user);
-    } catch (error) {
-        console.error("Google Signup Error:", error);
-        alert("Google Signup Failed: " + error.message);
-    }
-    */
 }
 
 window.signupWithGithub = async function () {
     alert("Social login is currently being migrated to Supabase. This feature will be available soon.");
-    /*
-    try {
-        const result = await signInWithPopup(auth, githubProvider);
-        await handleSocialSignup(result.user);
-    } catch (error) {
-        console.error("GitHub Signup Error:", error);
-        alert("GitHub Signup Failed: " + error.message);
-    }
-    */
 }
-
-/*
-async function handleSocialSignup(firebaseUser) {
-    try {
-        const payload = {
-            email: firebaseUser.email,
-            name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
-            avatar: firebaseUser.photoURL
-        };
-
-        const r = await fetch(`${API_BASE}/social-login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        const data = await r.json();
-        if (data.error) {
-            alert("Signup Failed: " + data.error);
-        } else {
-            localStorage.setItem("currentUser", JSON.stringify(data));
-            window.location.href = "/chat";
-        }
-    } catch (err) {
-        alert("Server Signup Failed: " + err.message);
-    }
-}
-*/
 
 // Attach globals for HTML
 window.signup = signup;
