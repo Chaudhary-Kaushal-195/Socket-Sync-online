@@ -349,34 +349,36 @@ async function signup() {
     if (!finalAvatar) {
         finalAvatar = "https://ui-avatars.com/api/?name=" + encodeURIComponent(suname.value);
     }
-    // Fix relative URL for DB
-    if (finalAvatar.startsWith("/")) {
-        finalAvatar = API_BASE + finalAvatar;
-    }
+
+    // For Supabase, we prefer public URLs. If it was uploaded to Supabase Storage (not impl yet in signup UI), it would be a URL.
+    // If it's a data URL (from FileReader in preview), it's too large for metadata usually.
+    // For now, let's assume default avatar or valid URL. 
+    // If uploadedAvatarUrl was set by legacy upload, it won't work. 
+    // We will revisit Avatar Upload replacement next. For now, use UI Avatar if custom not set properly.
 
     try {
-        const response = await fetch(`${API_BASE}/signup`, {
-            method: "POST",
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                name: suname.value,
-                userId: suid.value,
-                password: spwd.value,
-                avatar: finalAvatar
-            })
+        const { data, error } = await supabase.auth.signUp({
+            email: suid.value,
+            password: spwd.value,
+            options: {
+                data: {
+                    name: suname.value,
+                    avatar: finalAvatar
+                }
+            }
         });
 
-        const data = await response.json();
-
-        if (data.error) {
-            alert(data.error);
+        if (error) {
+            alert("Signup Failed: " + error.message);
             return;
         }
 
-        alert("Signup successful! Please login.");
+        alert("Signup successful! Please check your email for verification (if enabled) or just login.");
         window.location.href = "/login";
+
     } catch (err) {
-        alert("Signup failed: " + err.message);
+        alert("Signup critical error: " + err.message);
+        console.error(err);
     }
 }
 

@@ -44,16 +44,30 @@ function renderMediaContent(msg) {
 // ================= FILE UPLOAD =================
 
 async function uploadFile(file) {
-    const fd = new FormData();
-    fd.append("file", file);
+    if (!currentUser) throw new Error("Not logged in");
 
-    const r = await fetch(`${API_BASE}/upload`, {
-        method: "POST",
-        body: fd
-    });
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${currentUser.user_id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = fileName;
 
-    if (!r.ok) throw new Error("Upload failed");
-    return await r.json();
+    const { data, error } = await supabase.storage
+        .from('chat-media')
+        .upload(filePath, file);
+
+    if (error) {
+        console.error("Supabase Upload Error:", error);
+        throw new Error("Upload failed: " + error.message);
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+        .from('chat-media')
+        .getPublicUrl(filePath);
+
+    return {
+        file_url: publicUrl,
+        file_type: file.type,
+        success: true
+    };
 }
 
 // ================= INPUT CHANGE HANDLER =================
@@ -261,23 +275,28 @@ async function loadChatMedia() {
     if (!currentChat) return;
 
     try {
-        const r = await fetch(`${API_BASE}/chat/${currentChat}/media?u1=${currentUser.user_id}`);
-        const media = await r.json();
-        currentChatMedia = media;
+        const { data, error } = await supabase
+            .from('messages')
+            .select('file_url, file_type, timestamp')
+            .or(`and(sender.eq.${currentUser.user_id},receiver.eq.${currentChat}),and(sender.eq.${currentChat},receiver.eq.${currentUser.user_id})`)
+            .neq('file_url', null)
+            .order('timestamp', { ascending: false });
+
+        if (error) throw error;
+
+        currentChatMedia = data;
 
         // Update Count
         const countEl = document.getElementById("mediaCount");
-        if (countEl) countEl.innerText = `${media.length} >`;
+        if (countEl) countEl.innerText = `${data.length} >`;
 
         // Update Preview (First 3 images)
         const previewBox = document.getElementById("mediaPreview");
         if (previewBox) {
             previewBox.innerHTML = "";
-            const images = media.filter(m => m.file_type && m.file_type.startsWith("image")).slice(0, 3);
+            const images = data.filter(m => m.file_type && m.file_type.startsWith("image")).slice(0, 3);
             images.forEach(m => {
-                let url = m.file_url;
-                if (url.startsWith('/')) url = API_BASE + url;
-                previewBox.innerHTML += `<img src="${url}">`;
+                previewBox.innerHTML += `<img src="${m.file_url}">`;
             });
         }
     } catch (e) {

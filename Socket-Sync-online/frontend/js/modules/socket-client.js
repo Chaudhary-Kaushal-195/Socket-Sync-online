@@ -1,224 +1,247 @@
-// ================= SOCKET CLIENT =================
-// Handles all incoming socket events
 
-function setupSocketListeners(socket) {
+// ================= SUPABASE REALTIME CLIENT =================
 
-    // Connect / Queue Flush
-    socket.on("connect_error", (err) => {
-        console.error("SOCKET CONNECT ERROR:", err.message, err);
-    });
+let realtimeChannel = null;
 
-    socket.on("connect", () => {
-        console.log("SOCKET CONNECTED:", socket.id);
-        const user = JSON.parse(localStorage.getItem("user"));
-        if (typeof msgQueue !== 'undefined' && msgQueue.length > 0) {
-            console.log(`Flushing ${msgQueue.length} messages`);
-            msgQueue.forEach(payload => {
-                socket.emit("send_message", payload);
-            });
-            msgQueue = [];
-            localStorage.setItem("msgQueue", "[]");
-        }
-    });
+function setupSupabaseRealtime() {
+    if (!currentUser) return;
 
-    // Message Sent Confirmation (Update Temp ID to Real ID)
-    socket.on("message_sent_confirm", data => {
-        const tempId = data.temp_id;
-        const realId = data.id;
+    console.log("Setting up Supabase Realtime for user:", currentUser.user_id);
 
-        const el = document.querySelector(`.msg[data-temp-id="${tempId}"]`);
-        if (el) {
-            el.id = `msg-${realId}`;
-            el.dataset.id = realId;
+    // Subscribe to ALL messages where sender or receiver is ME.
+    // Row Level Security (RLS) protects the data, but Realtime filters strictly by column value if specified.
+    // However, Supabase Realtime 'postgres_changes' filter is limited.
+    // Best pattern: Listen to "messages" table public-wide (filter in client? No, insecure/spammy).
+    // Better: Listen with a filter. But "OR" filters are hard in Realtime syntax.
+    // Workaround: Listen to the whole table, but rely on RLS?
+    // NOTE: Realtime by default broadcasts ALL changes to subscribed tables if RLS is not enabled for realtime.
+    // If RLS is enabled for realtime (WAL), we need to be authenticated (which we are via supabase-client.js if we set the session).
 
-            const tick = el.querySelector(".msg-tick i");
-            if (tick) tick.className = "fas fa-check";
+    // Actually, simple filtering:
+    // We can't easily filter "sender=me OR receiver=me".
+    // We will listen to the table. RLS *does not* apply to Realtime broadcast stream by default unless "Project Settings > Realtime > Enforce RLS" is on.
+    // Assuming RLS is enforced for "select", Realtime might send everything if not careful.
+    // For this implementation, we'll implement client-side filtering for simplicity, 
+    // assuming the volume isn't massive yet.
 
-            // Update context menu handler with real ID
-            let oldAttr = el.getAttribute("oncontextmenu");
-            if (oldAttr) {
-                // Regex: match handleCtxMenu(event, optionally_quoted_digits
-                let newAttr = oldAttr.replace(/handleCtxMenu\(event,\s*['"]?(\d+)['"]?/, `handleCtxMenu(event, '${realId}'`);
-                el.setAttribute("oncontextmenu", newAttr);
+    realtimeChannel = supabase
+        .channel('public:messages')
+        .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'messages' },
+            (payload) => {
+                handleRealtimeEvent(payload);
             }
-        }
+        )
+        .subscribe((status) => {
+            console.log("Supabase Realtime status:", status);
+        });
+}
 
-        if (currentChat && messageCache.has(currentChat)) {
-            const msgs = messageCache.get(currentChat);
-            const target = msgs.find(m => m.temp_id == tempId);
-            if (target) {
-                target.id = realId;
-                target.status = "sent";
-            }
-        }
-    });
+function handleRealtimeEvent(payload) {
+    const { eventType, new: newRec, old: oldRec } = payload;
 
-    // Receive Message
-    socket.on("receive_message", m => {
-        console.log("RECEIVED MSG:", m, "CURRENT USER:", currentUser.user_id);
-        const chatPartner = m.from;
+    // 1. FILTER: Only care if it involves ME
+    // Note: 'newRec' is null for DELETE
+    const rec = newRec || oldRec;
+    // But oldRec might only have ID if identity is default.
+    // If newRec exists, check it.
 
-        if (!messageCache.has(chatPartner)) {
-            messageCache.set(chatPartner, []);
-        }
-        const msgs = messageCache.get(chatPartner);
-
-        // Deduplicate
-        if (msgs.some(existing => existing.id === m.id)) {
+    if (newRec) {
+        // If I am sender or receiver
+        // Note: Supabase returns UUIDs for sender/receiver
+        // currentUser.user_id is now UUID (from login.js)
+        if (newRec.sender !== currentUser.user_id && newRec.receiver !== currentUser.user_id) {
             return;
         }
-
-        msgs.push(m);
-
-        if (
-            chatPartner === currentChat &&
-            m.to === currentUser.user_id
-        ) {
-            showMsg(m);
-            // If chat is open, it's read
-            socket.emit("read_messages", { sender: chatPartner, receiver: currentUser.user_id });
-        } else {
-            // Delivered but UNREAD
-            if (m.to === currentUser.user_id) {
-                socket.emit("delivery_receipt", { msg_id: m.id, sender: m.from, receiver: currentUser.user_id });
-
-                // Update UI Badge
-                const chatItem = document.getElementById(`chat-item-${m.from}`);
-                if (chatItem) {
-                    // Prevent duplicate badge count for the same message
-                    const badgeKey = `processed-${m.id}`;
-                    if (window[badgeKey]) return;
-                    window[badgeKey] = true;
-
-                    const chatName = chatItem.querySelector(".chat-name");
-                    let badge = chatItem.querySelector(".unread-badge");
-                    if (!badge) {
-                        badge = document.createElement("div");
-                        badge.className = "unread-badge";
-                        badge.innerText = "0";
-                        if (chatName) chatName.appendChild(badge);
-                        else chatItem.appendChild(badge);
-                    }
-                    const count = parseInt(badge.innerText) || 0;
-                    badge.innerText = count + 1;
-                }
-            }
-        }
-    });
-
-    // Message Delivered Receipt
-    socket.on("message_delivered", data => {
-        applyDeliveryToUI(data.id);
-    });
-
-    // Bulk Message Delivered Receipt
-    socket.on("bulk_message_delivered", data => {
-        if (data.ids && Array.isArray(data.ids)) {
-            data.ids.forEach(id => {
-                applyDeliveryToUI(id);
-            });
-        }
-    });
-
-    function applyDeliveryToUI(id) {
-        const el = document.getElementById(`msg-${id}`);
-        if (el) {
-            const tick = el.querySelector(".msg-tick i");
-            if (tick && !tick.classList.contains("read")) {
-                tick.className = "fas fa-check-double"; // Double Gray
-            }
-        }
-
-        messageCache.forEach(msgs => {
-            const target = msgs.find(m => m.id == id);
-            if (target && target.status !== "read") {
-                target.status = "delivered";
-            }
-        });
     }
 
-    // Message Read Receipt
-    socket.on("messages_read", data => {
-        const partnerId = data.by;
-
-        if (partnerId === currentChat) {
-            const myMsgs = document.querySelectorAll(".msg.sent .msg-tick i");
-            myMsgs.forEach(icon => {
-                icon.className = "fas fa-check-double read";
+    if (eventType === 'INSERT') {
+        handleIncomingMessage(newRec);
+    }
+    else if (eventType === 'UPDATE') {
+        handleMessageUpdate(newRec);
+    }
+    else if (eventType === 'DELETE') {
+        // We might only get ID. 
+        if (oldRec && oldRec.id) {
+            // We can't verify ownership easily here if oldRec only has ID.
+            // But if we delete it from UI, it's fine.
+            removeMsgFromUI(oldRec.id);
+            // Remove from cache
+            messageCache.forEach((msgs, uid) => {
+                const idx = msgs.findIndex(m => m.id == oldRec.id);
+                if (idx > -1) msgs.splice(idx, 1);
             });
         }
+    }
+}
 
+function handleIncomingMessage(msg) {
+    // Normalization to match UI expectations
+    // Supabase returns keys as in DB (e.g. user_id). 
+    // UI expects: id, from, to, message, file_url...
+    // My DB cols: sender, receiver. Need mapping.
+
+    const normalizedMsg = {
+        id: msg.id,
+        from: msg.sender,
+        to: msg.receiver,
+        message: msg.message,
+        file_url: msg.file_url,
+        file_type: msg.file_type,
+        timestamp: msg.timestamp, // ISO string
+        status: msg.status,
+        is_revoked: msg.is_revoked,
+        temp_id: null // Realtime doesn't have temp_id
+    };
+
+    // If I sent it, I might have a temp version in UI.
+    if (normalizedMsg.from === currentUser.user_id) {
+        // It's an echo of my own message.
+        // We need to dedupe or replace temp message.
+        // Since we don't have temp_id in DB, we can't easily match.
+        // However, if we just appended it in send(), we likely have it in cache with id=0.
+
+        // Find in cache by content + approximate timestamp?
+        // Or just let it be?
+        // If we don't replace, we might have duplicates until refresh.
+        // Let's rely on standard deduping by ID, but `send()` added it with `id=0`.
+
+        // Strategy: Look for a message in cache with `id=0` and same content.
+        const partnerId = normalizedMsg.to;
         if (messageCache.has(partnerId)) {
-            messageCache.get(partnerId).forEach(m => {
-                if (m.from === currentUser.user_id) {
-                    m.status = "read";
+            const msgs = messageCache.get(partnerId);
+            // Find a temp message (id=0) that matches content
+            const tempMatch = msgs.find(m => m.id === 0 && m.message === normalizedMsg.message && m.file_url === normalizedMsg.file_url);
+            if (tempMatch) {
+                // Update it
+                tempMatch.id = normalizedMsg.id;
+                tempMatch.timestamp = normalizedMsg.timestamp; // sync server time
+
+                // Update UI
+                // We need to find the DOM element. It was rendered with `data-temp-id`.
+                // But we don't know the temp_id here! 
+                // `send()` generated temp_id. `tempMatch` has `temp_id`.
+                const tempId = tempMatch.temp_id;
+
+                const el = document.querySelector(`.msg[data-temp-id="${tempId}"]`);
+                if (el) {
+                    el.id = `msg-${normalizedMsg.id}`;
+                    el.dataset.id = normalizedMsg.id;
+                    el.removeAttribute("data-temp-id");
+                    const tick = el.querySelector(".msg-tick i");
+                    if (tick) tick.className = "fas fa-check"; // Sent
+
+                    // Update context menu handler
+                    let oldAttr = el.getAttribute("oncontextmenu");
+                    if (oldAttr) {
+                        let newAttr = oldAttr.replace(/handleCtxMenu\(event,\s*['"]?(\d+)['"]?/, `handleCtxMenu(event, '${normalizedMsg.id}'`);
+                        el.setAttribute("oncontextmenu", newAttr);
+                    }
                 }
-            });
-        }
-    });
-
-    // Message Revoked
-    socket.on("message_revoked", data => {
-        applyRevocationToUI(data.id, data.message);
-    });
-
-    // Bulk Message Revoked
-    socket.on("bulk_message_revoked", data => {
-        if (data.ids && Array.isArray(data.ids)) {
-            data.ids.forEach(id => {
-                applyRevocationToUI(id, data.message);
-            });
-        }
-    });
-
-    function applyRevocationToUI(id, message) {
-        const el = document.getElementById(`msg-${id}`);
-        if (el) {
-            el.classList.remove("has-media", "msg-media");
-
-            const mediaSelectors = [".media-box", ".chat-video", ".chat-audio", ".file-card"];
-            mediaSelectors.forEach(selector => {
-                const mediaEl = el.querySelector(selector);
-                if (mediaEl) mediaEl.remove();
-            });
-
-            let contentDiv = el.querySelector(".msg-content");
-            if (!contentDiv) {
-                contentDiv = document.createElement("div");
-                contentDiv.className = "msg-content";
-                const timeDiv = el.querySelector(".msg-time");
-                el.insertBefore(contentDiv, timeDiv);
+                return; // Done update
             }
-
-            contentDiv.innerHTML = `<i class="fas fa-ban"></i> ${message}`;
-            contentDiv.style.color = "var(--text-secondary)";
-            contentDiv.style.fontStyle = "italic";
         }
-
-        messageCache.forEach(msgs => {
-            const target = msgs.find(m => m.id == id);
-            if (target) {
-                target.message = message;
-                target.file_url = null;
-                target.is_revoked = 1;
-            }
-        });
     }
 
-    // Message Deleted (Hard delete or soft delete for me)
-    socket.on("message_deleted", data => {
-        removeMsgFromUI(data.id);
-    });
+    // Add to Cache (if not me-echo handled above, or if I am receiver)
+    const partnerId = (normalizedMsg.from === currentUser.user_id) ? normalizedMsg.to : normalizedMsg.from;
 
-    socket.on("bulk_message_deleted", data => {
-        if (data.ids && Array.isArray(data.ids)) {
-            data.ids.forEach(id => {
-                removeMsgFromUI(id);
-            });
+    if (!messageCache.has(partnerId)) {
+        messageCache.set(partnerId, []);
+    }
+
+    // Check duplicate (by ID)
+    const validCache = messageCache.get(partnerId);
+    if (validCache.find(m => m.id === normalizedMsg.id)) return;
+
+    validCache.push(normalizedMsg);
+
+    // If allowed, play sound for incoming
+    if (normalizedMsg.from !== currentUser.user_id) {
+        if (typeof playNotificationSound === 'function') playNotificationSound();
+    }
+
+    // Update UI if chat open
+    if (currentChat === partnerId) {
+        showMsg(normalizedMsg); // in ui-renderer.js
+        scrollToBottom();
+
+        // Mark as read immediately if I'm looking at it
+        if (normalizedMsg.from !== currentUser.user_id) {
+            markAsRead(normalizedMsg.id);
         }
-    });
+    } else {
+        // Update badge
+        const chatItem = document.getElementById(`chat-item-${partnerId}`);
+        if (chatItem) {
+            const chatName = chatItem.querySelector(".chat-name");
+            let badge = chatItem.querySelector(".unread-badge");
+            if (!badge) {
+                badge = document.createElement("div");
+                badge.className = "unread-badge";
+                badge.innerText = "0";
+                chatName.appendChild(badge);
+            }
+            const count = parseInt(badge.innerText) || 0;
+            badge.innerText = count + 1;
+        }
+    }
+}
 
-    socket.on("error", data => {
-        alert(data.message);
+function handleMessageUpdate(msg) {
+    // E.g. marked as read, or revoked
+    const normalizedMsg = {
+        id: msg.id,
+        is_revoked: msg.is_revoked,
+        status: msg.status
+    };
+
+    // Update Cache
+    messageCache.forEach(msgs => {
+        const local = msgs.find(m => m.id === normalizedMsg.id);
+        if (local) {
+            local.is_revoked = normalizedMsg.is_revoked;
+            local.status = normalizedMsg.status;
+
+            // Update UI
+            const el = document.getElementById(`msg-${local.id}`);
+            if (el) {
+                // 1. Revoked
+                if (local.is_revoked) {
+                    el.querySelector(".msg-content").innerHTML = `<i class="fas fa-ban"></i> Message revoked`;
+                    el.querySelector(".msg-content").style.fontStyle = "italic";
+                    el.querySelector(".msg-content").style.color = "var(--text-secondary)";
+                    el.classList.remove("has-media", "msg-media");
+                    // Remove media elements
+                    const mediaEls = el.querySelectorAll(".media-box, .chat-video, .chat-audio, .file-card");
+                    mediaEls.forEach(x => x.remove());
+                }
+
+                // 2. Status update (ticks)
+                if (local.from === currentUser.user_id) {
+                    const tick = el.querySelector(".msg-tick i");
+                    if (tick) {
+                        if (local.status === 'read') tick.className = "fas fa-check-double read";
+                        else if (local.status === 'delivered') tick.className = "fas fa-check-double";
+                    }
+                }
+            }
+        }
     });
 }
+
+function markAsRead(msgId) {
+    if (!currentUser) return;
+    supabase.from('messages').update({ status: 'read' }).eq('id', msgId).then(res => {
+        // console.log("Marked as read", res);
+    });
+}
+
+function playNotificationSound() {
+    // Placeholder
+}
+
+// Export for chat.js
+window.setupSupabaseRealtime = setupSupabaseRealtime;

@@ -4,16 +4,47 @@
 async function loadMessages(partnerId) {
     if (!messagesBox) return;
     messagesBox.innerHTML = "";
-    try {
-        const r = await fetch(`${API_BASE}/messages?u1=${currentUser.user_id}&u2=${partnerId}`);
-        const msgs = await r.json();
 
-        messageCache.set(partnerId, msgs);
-        msgs.forEach(m => showMsg(m));
+    // Check if we are logged in
+    if (!currentUser) return;
+
+    try {
+        const { data: msgs, error } = await supabase
+            .from('messages')
+            .select('*')
+            .or(`and(sender.eq.${currentUser.user_id},receiver.eq.${partnerId}),and(sender.eq.${partnerId},receiver.eq.${currentUser.user_id})`)
+            .order('timestamp', { ascending: true });
+
+        if (error) {
+            console.error("Failed to load messages from Supabase", error);
+            return;
+        }
+
+        // Renormalize if needed (already matches mostly)
+        // Adjust for UI expectations if field names differ
+        // UI expects: id, from, to, message, file_url, file_type, timestamp
+        // DB has: id, sender, receiver, message, file_url, file_type, timestamp
+        // We can map it on the fly or adjust UI to use sender/receiver. 
+        // Let's map it to keep UI consistent with `handleIncomingMessage` in socket-client.js
+
+        const uiMsgs = msgs.map(m => ({
+            id: m.id,
+            from: m.sender,
+            to: m.receiver,
+            message: m.message,
+            file_url: m.file_url,
+            file_type: m.file_type,
+            timestamp: m.timestamp,
+            status: m.status,
+            is_revoked: m.is_revoked
+        }));
+
+        messageCache.set(partnerId, uiMsgs);
+        uiMsgs.forEach(m => showMsg(m));
 
         scrollToBottom();
     } catch (e) {
-        console.error("Failed to load messages", e);
+        console.error("Exception loading messages", e);
     }
 }
 

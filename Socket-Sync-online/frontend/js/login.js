@@ -180,11 +180,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id = document.getElementById('uid').value;
+            const email = document.getElementById('uid').value;
             const pwd = document.getElementById('pwd').value;
 
             // Validate fields
-            const userIdErrors = validateUserId(id);
+            const userIdErrors = validateUserId(email);
             const passwordErrors = validatePassword(pwd);
 
             const userIdValid = showFieldError(uidInput, userIdErrors);
@@ -195,21 +195,49 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
-                const r = await fetch(`${API_BASE}/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: id, password: pwd })
+                // Supabase Login
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: pwd
                 });
 
-                const data = await r.json();
-                if (data.error) {
-                    alert(data.error);
+                if (error) {
+                    alert("Login failed: " + error.message);
                 } else {
-                    localStorage.setItem("currentUser", JSON.stringify(data));
+                    // Fetch Profile details to store in currentUser
+                    const { data: profile, error: profileError } = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', data.session.user.id)
+                        .single();
+
+                    if (profileError) {
+                        console.error("Profile fetch error", profileError);
+                        // Fallback using auth metadata if profile fails
+                        const userMeta = data.session.user.user_metadata;
+                        const currentUser = {
+                            user_id: data.session.user.id, // UUID
+                            email: data.session.user.email,
+                            name: userMeta.name || email.split('@')[0],
+                            avatar: userMeta.avatar || "https://ui-avatars.com/api/?name=User"
+                        };
+                        localStorage.setItem("currentUser", JSON.stringify(currentUser));
+                    } else {
+                        // Use profile data
+                        const currentUser = {
+                            user_id: profile.id, // UUID
+                            email: profile.user_id, // stored email in profiles
+                            name: profile.name,
+                            avatar: profile.avatar
+                        };
+                        localStorage.setItem("currentUser", JSON.stringify(currentUser));
+                    }
+
                     window.location.href = "/chat";
                 }
             } catch (err) {
-                alert("Login failed: " + err.message);
+                alert("Login critical error: " + err.message);
+                console.error(err);
             }
         });
     }
