@@ -644,6 +644,11 @@ body.light-mode .msg-tick i.read {
 }
 
 @media (max-width: 768px) {
+    .messages {
+        padding: 10px 5px !important;
+        /* Reduce side padding for full width feel */
+    }
+
     .input-area {
         padding: 8px 10px;
         padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
