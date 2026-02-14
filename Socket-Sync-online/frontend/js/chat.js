@@ -10,7 +10,11 @@ const storedUser = localStorage.getItem("currentUser");
 if (storedUser) {
     window.currentUser = JSON.parse(storedUser);
     currentUser = window.currentUser; // Update local ref if any
-    document.getElementById("me").innerText = window.currentUser.name;
+    const meEl = document.getElementById("me");
+    if (meEl) meEl.innerText = window.currentUser.name;
+
+    const meMobileEl = document.getElementById("me-mobile");
+    if (meMobileEl) meMobileEl.innerText = `Welcome back, ${window.currentUser.name}`;
     // socket.emit("join") REMOVED
 
     // Load Theme
