@@ -8,6 +8,8 @@
     flex-direction: column;
     position: relative;
     overflow: hidden;
+    padding: 0 !important;
+    /* Override Bootstrap container padding */
 }
 
 /* Subtle background glow */
