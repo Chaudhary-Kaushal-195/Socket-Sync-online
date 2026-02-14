@@ -645,15 +645,31 @@ body.light-mode .msg-tick i.read {
 
 @media (max-width: 768px) {
     .messages {
-        padding: 10px 5px !important;
-        /* Reduce side padding for full width feel */
+        padding: 10px 8px !important;
+    }
+
+    .chat-header {
+        margin: 0 !important;
+        border-radius: 0 !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .root-header {
+        /* If there is a main app header, we might want to keep it or adjust */
+        /* layout.css handles .header */
+    }
+
+    .msg {
+        max-width: 85%;
+        /* Use more width on mobile */
     }
 
     .input-area {
-        padding: 8px 10px;
-        padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-        margin: 0 6px 8px 6px;
-        margin-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+        margin: 0 !important;
+        border-radius: 0 !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 10px 12px;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
         gap: 6px;
     }
 
