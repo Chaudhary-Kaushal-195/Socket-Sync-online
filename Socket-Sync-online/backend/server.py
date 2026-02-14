@@ -660,6 +660,28 @@ def start_dashboard():
         print(f"Failed to start dashboard: {e}")
         return jsonify({"error": str(e)}), 500
 
+# ================== DEBUG ROUTE ==================
+@app.route("/debug-paths")
+def debug_paths():
+    try:
+        current_dir = os.getcwd()
+        server_dir = os.path.dirname(os.path.abspath(__file__))
+        template_dir_contents = "Not Found"
+        try:
+            template_dir_contents = os.listdir(TEMPLATE_DIR)
+        except Exception as e:
+            template_dir_contents = str(e)
+            
+        return jsonify({
+            "cwd": current_dir,
+            "server_path": server_dir,
+            "template_dir": TEMPLATE_DIR,
+            "template_dir_contents": template_dir_contents,
+            "parent_dir_contents": os.listdir(os.path.join(server_dir, ".."))
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
 # ================== RUN ==================
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
