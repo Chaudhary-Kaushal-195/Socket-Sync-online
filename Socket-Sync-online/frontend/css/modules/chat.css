@@ -226,7 +226,7 @@
 /* Deleted Message Styling */
 /* Deleted Message Styling */
 .msg.deleted {
-    padding: 4px 8px;
+    padding: 0px 0px;
     /* Reduced padding as requested */
     font-size: 0.9rem;
     font-style: italic;
