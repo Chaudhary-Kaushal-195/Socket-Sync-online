@@ -486,6 +486,25 @@ body.light-mode .chat-item.active {
 @media (max-width: 768px) {
     .header {
         padding: 0 12px;
+        position: relative;
+    }
+
+    .header-title-container {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        z-index: 10;
+    }
+
+    /* Add margin to toggle button as requested */
+    .sidebar-toggle-btn {
+        margin-left: 8px !important;
+    }
+
+    /* Reduce gap between right-side icons on mobile */
+    .header-controls {
+        gap: 8px;
     }
 
     .app {
