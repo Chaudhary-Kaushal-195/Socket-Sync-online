@@ -226,20 +226,15 @@
 /* Deleted Message Styling */
 /* Deleted Message Styling */
 .msg.deleted {
-    /* Slightly reduced vertical padding, standard horizontal */
-    padding: 6px 16px;
+    /* Standard message padding, only italic */
     font-style: italic;
-    /* Only difference is italic text and padding */
 }
 
 .msg.deleted .msg-content {
     display: inline;
 }
 
-.msg.deleted .msg-content i {
-    margin-right: 6px;
-    font-size: 0.85rem;
-}
+
 
 /* Restore spacer for proper time alignment (inherits from .msg:not(.has-media)) */
 .msg.deleted .msg-content::after {
