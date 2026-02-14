@@ -228,6 +228,11 @@ body.light-mode .sidebar-toggle-btn:hover {
     font-weight: 500;
 }
 
+.sidebar-search-container {
+    padding: 15px 20px 10px 20px;
+    /* Added top padding */
+}
+
 .chat-list {
     flex: 1;
     overflow-y: auto;
