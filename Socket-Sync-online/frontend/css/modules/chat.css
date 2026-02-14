@@ -256,10 +256,7 @@
     opacity: 0.7;
 }
 
-/* Light Mode Deleted */
-body.light-mode .msg.deleted {
-    /* Inherit standard light mode colors */
-}
+
 
 /* ========== MEDIA MESSAGES ========== */
 .msg.has-media {
