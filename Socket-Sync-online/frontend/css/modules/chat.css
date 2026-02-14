@@ -226,9 +226,10 @@
 /* Deleted Message Styling */
 /* Deleted Message Styling */
 .msg.deleted {
-    /* Inherit everything from .msg (padding, font-size, color) */
+    /* Slightly reduced vertical padding, standard horizontal */
+    padding: 6px 16px;
     font-style: italic;
-    /* Only difference is italic text */
+    /* Only difference is italic text and padding */
 }
 
 .msg.deleted .msg-content {
