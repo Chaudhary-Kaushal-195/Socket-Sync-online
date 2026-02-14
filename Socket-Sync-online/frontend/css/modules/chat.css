@@ -226,10 +226,9 @@
 /* Deleted Message Styling */
 /* Deleted Message Styling */
 .msg.deleted {
-    /* padding removed to inherit standard .msg padding */
-    font-size: 0.9rem;
+    /* Inherit everything from .msg (padding, font-size, color) */
     font-style: italic;
-    opacity: 0.8;
+    /* Only difference is italic text */
 }
 
 .msg.deleted .msg-content {
@@ -259,7 +258,6 @@
 /* Light Mode Deleted */
 body.light-mode .msg.deleted {
     /* Inherit standard light mode colors */
-    opacity: 0.8;
 }
 
 /* ========== MEDIA MESSAGES ========== */
