@@ -148,6 +148,15 @@ function openChat(userId, name, avatar) {
     document.getElementById("chatHeaderTitle").innerText = name;
     document.getElementById("chatAvatar").src = avatar;
 
+    // Initial Online Status
+    const statusEl = document.getElementById("chatStatus");
+    if (statusEl) {
+        const isOnline = window.onlineUsers && window.onlineUsers.has(userId);
+        statusEl.innerText = isOnline ? "Online" : "Offline";
+        statusEl.style.color = isOnline ? "#22c55e" : "var(--text-secondary)";
+        statusEl.style.fontWeight = isOnline ? "600" : "400";
+    }
+
     document.getElementById("saveContactBtn").classList.add("hidden");
 
     if (window.innerWidth <= 768) {

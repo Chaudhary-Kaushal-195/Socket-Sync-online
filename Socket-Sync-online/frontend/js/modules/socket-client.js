@@ -88,17 +88,38 @@ function updateAllUserStatuses() {
     items.forEach(item => {
         const uid = item.dataset.id;
         if (uid) {
-            if (onlineUsers.has(uid)) item.classList.add('online');
+            const isOnline = onlineUsers.has(uid);
+            if (isOnline) item.classList.add('online');
             else item.classList.remove('online');
+
+            // Also update header if open
+            if (currentChat === uid) {
+                updateChatHeaderStatus(uid, isOnline);
+            }
         }
     });
 }
 
 function updateUserStatusUI(userId, isOnline) {
+    // 1. Update List Item
     const item = document.getElementById(`chat-item-${userId}`);
     if (item) {
         if (isOnline) item.classList.add('online');
         else item.classList.remove('online');
+    }
+
+    // 2. Update Header if Open
+    if (currentChat === userId) {
+        updateChatHeaderStatus(userId, isOnline);
+    }
+}
+
+function updateChatHeaderStatus(userId, isOnline) {
+    const statusEl = document.getElementById("chatStatus");
+    if (statusEl) {
+        statusEl.innerText = isOnline ? "Online" : "Offline";
+        statusEl.style.color = isOnline ? "#22c55e" : "var(--text-secondary)";
+        statusEl.style.fontWeight = isOnline ? "600" : "400";
     }
 }
 
