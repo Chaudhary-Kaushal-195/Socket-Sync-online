@@ -157,7 +157,7 @@ function openChat(userId, name, avatar) {
         .update({ status: 'read' })
         .eq('sender', userId)
         .eq('receiver', currentUser.user_id)
-        .eq('status', 'delivered')
+        .neq('status', 'read') // Update if NOT read (sent OR delivered)
         .then(() => { });
 
     const chatItem = document.getElementById(`chat-item-${userId}`);
