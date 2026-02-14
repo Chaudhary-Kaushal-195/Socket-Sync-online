@@ -225,23 +225,37 @@
 
 /* Deleted Message Styling */
 .msg.deleted {
-    padding: 8px 14px;
+    padding: 6px 12px;
     font-size: 0.9rem;
     font-style: italic;
     color: rgba(255, 255, 255, 0.6) !important;
     background: rgba(255, 255, 255, 0.05) !important;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: none !important;
-    /* Default display:block/fit-content from .msg is better for time positioning */
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .msg.deleted .msg-content {
     display: inline;
 }
 
+/* Remove the spacer hack for deleted messages since we use flex gap */
+.msg.deleted .msg-content::after {
+    content: none !important;
+}
+
 .msg.deleted .msg-content i {
     margin-right: 6px;
     font-size: 0.85rem;
+}
+
+.msg.deleted .msg-time {
+    margin-left: 0 !important;
+    /* let gap handle spacing */
+    opacity: 0.7;
 }
 
 /* Light Mode Deleted */
