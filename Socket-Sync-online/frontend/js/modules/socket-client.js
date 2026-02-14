@@ -57,23 +57,63 @@ function handleRealtimeEvent(payload) {
     }
 
     if (eventType === 'INSERT') {
+        console.log("Realtime INSERT:", newRec);
         handleIncomingMessage(newRec);
     }
     else if (eventType === 'UPDATE') {
+        console.log("Realtime UPDATE:", newRec);
         handleMessageUpdate(newRec);
     }
     else if (eventType === 'DELETE') {
-        // We might only get ID. 
-        if (oldRec && oldRec.id) {
-            // We can't verify ownership easily here if oldRec only has ID.
-            // But if we delete it from UI, it's fine.
-            removeMsgFromUI(oldRec.id);
-            // Remove from cache
-            messageCache.forEach((msgs, uid) => {
-                const idx = msgs.findIndex(m => m.id == oldRec.id);
-                if (idx > -1) msgs.splice(idx, 1);
-            });
+        // ...
+    }
+}
+
+// ...
+
+function handleMessageUpdate(msg) {
+    console.log("handleMessageUpdate:", msg);
+    // ...
+
+    // Update Cache
+    messageCache.forEach(msgs => {
+        const local = msgs.find(m => m.id === normalizedMsg.id);
+        if (local) {
+            console.log("Found local message to update:", local);
+            local.is_revoked = normalizedMsg.is_revoked;
+            local.status = normalizedMsg.status;
+
+            // Update UI
+            const el = document.getElementById(`msg-${local.id}`);
+            if (el) {
+                // ...
+
+                // 2. Status update (ticks)
+                if (local.from === currentUser.user_id) {
+                    const tick = el.querySelector(".msg-tick i");
+                    console.log("Updating tick for msg:", local.id, "Status:", local.status, "Tick Element:", tick);
+                    if (tick) {
+                        if (local.status === 'read') tick.className = "fas fa-check-double read";
+                        else if (local.status === 'delivered') tick.className = "fas fa-check-double";
+                    }
+                }
+            } else {
+                console.warn("Element not found for msg update:", local.id);
+            }
         }
+    });
+}
+// We might only get ID. 
+if (oldRec && oldRec.id) {
+    // We can't verify ownership easily here if oldRec only has ID.
+    // But if we delete it from UI, it's fine.
+    removeMsgFromUI(oldRec.id);
+    // Remove from cache
+    messageCache.forEach((msgs, uid) => {
+        const idx = msgs.findIndex(m => m.id == oldRec.id);
+        if (idx > -1) msgs.splice(idx, 1);
+    });
+}
     }
 }
 
