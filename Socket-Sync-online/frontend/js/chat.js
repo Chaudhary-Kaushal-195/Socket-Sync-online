@@ -165,6 +165,8 @@ function openChat(userId, name, avatar) {
         const badge = chatItem.querySelector(".unread-badge");
         if (badge) badge.remove();
     }
+
+    checkBlockStatus();
 }
 
 async function saveCurrentContact() {
@@ -176,57 +178,80 @@ async function send() {
     if (!currentChat) return;
 
     const textMsg = msgInput.value.trim();
+    // We can allow empty text if there is a file
+    if (textMsg === "" && selectedFiles.length === 0) return;
+
     const tempId = Date.now();
+    let fileUrl = null;
+    let fileType = null;
 
-    const cacheAndShow = (msgObj) => {
-        if (!messageCache.has(currentChat)) {
-            messageCache.set(currentChat, []);
-        }
-        messageCache.get(currentChat).push(msgObj);
-        showMsg(msgObj);
-    };
-
+    // 1. Handle File Upload if any
     if (selectedFiles.length > 0) {
-        // Handle files - Loop through/upload
-        // For MVP, standard text flow or separate upload function used in file handler
-        // If file handler calls uploadFile separately, we just handle text here.
-        // Usually file handler clears selectedFiles.
-        // We'll assume file handling is separate for now or implement if needed.
-        // existing logic was weird about files in send().
-        // Let's stick to text for this block.
+        // For MVP, handle single file or first file if multiple, 
+        // to match offline "image with text" capability.
+        // Offline code passed file_url/type from separate upload.
+        // We will upload here.
+
+        const file = selectedFiles[0]; // Take first
+        try {
+            // Show some loading state?
+            const uploaded = await uploadFile(file); // media.js
+            fileUrl = uploaded.file_url;
+            fileType = file.type;
+        } catch (e) {
+            console.error("Upload failed", e);
+            showAlert("Failed to upload file", "danger");
+            return;
+        }
     }
 
-    if (textMsg !== "") {
+    // 2. Optimistic UI Update
+    const msgObj = {
+        id: 0,
+        temp_id: tempId,
+        from: currentUser.user_id,
+        to: currentChat, // local expectation
+        message: textMsg || null,
+        file_url: fileUrl,
+        file_type: fileType,
+        timestamp: new Date().toISOString(),
+        status: "sending",
+        is_revoked: false
+    };
 
-        const msgObj = {
-            id: 0,
-            temp_id: tempId,
-            from: currentUser.user_id,
-            message: textMsg,
-            timestamp: new Date().toISOString(),
-            status: "sending"
-        };
+    if (!messageCache.has(currentChat)) {
+        messageCache.set(currentChat, []);
+    }
+    messageCache.get(currentChat).push(msgObj);
+    showMsg(msgObj);
+    scrollToBottom();
 
-        cacheAndShow(msgObj);
-        msgInput.value = "";
+    // Reset Input
+    msgInput.value = "";
+    selectedFiles = [];
+    document.getElementById("filePreviewContainer").classList.add("hidden");
+    document.getElementById("filePreviewContainer").innerHTML = "";
 
-        try {
-            const { error } = await supabase
-                .from('messages')
-                .insert({
-                    sender: currentUser.user_id,
-                    receiver: currentChat,
-                    message: textMsg,
-                    status: 'sent'
-                });
+    // 3. Send to Supabase
+    try {
+        const { error } = await supabase
+            .from('messages')
+            .insert({
+                sender: currentUser.user_id,
+                receiver: currentChat,
+                message: textMsg || null,
+                file_url: fileUrl,
+                file_type: fileType,
+                status: 'sent'
+            });
 
-            if (error) {
-                console.error("Send failed", error);
-                showAlert("Failed to send message", "danger");
-            }
-        } catch (e) {
-            console.error("Send exception", e);
+        if (error) {
+            console.error("Send failed", error);
+            showAlert("Failed to send message", "danger");
+            // Ideally mark message as failed in UI
         }
+    } catch (e) {
+        console.error("Send exception", e);
     }
 }
 
@@ -245,6 +270,7 @@ async function sendVoiceMessage(file) {
             id: 0,
             temp_id: Date.now(),
             from: currentUser.user_id,
+            to: currentChat,
             file_url: uploaded.file_url,
             file_type: "audio/webm",
             message: null,
@@ -255,6 +281,7 @@ async function sendVoiceMessage(file) {
         if (!messageCache.has(currentChat)) messageCache.set(currentChat, []);
         messageCache.get(currentChat).push(msgObj);
         showMsg(msgObj);
+        scrollToBottom();
 
         // DB Insert
         const { error } = await supabase.from('messages').insert({
@@ -295,7 +322,12 @@ function handleCtxMenu(e, msgId, text, fileUrl, fileType) {
 
     // Boundary check
     const menu = ctxMenu;
-    // ... logic same ...
+    const rect = menu.getBoundingClientRect();
+    const winWidth = window.innerWidth;
+    const winHeight = window.innerHeight;
+
+    if (x + rect.width > winWidth) x = winWidth - rect.width - 10;
+    if (y + rect.height > winHeight) y = winHeight - rect.height - 10;
 
     ctxMenu.style.left = `${x}px`;
     ctxMenu.style.top = `${y}px`;
@@ -314,6 +346,8 @@ function ctxDelete() {
     const btn = document.getElementById("btnDeleteEveryone");
     btn.style.display = "none";
 
+    // Check if I can delete for everyone (only my messages)
+    // We need to look up the message to check ownership
     let isMyMsg = false;
     let isRevoked = false;
 
@@ -354,36 +388,72 @@ async function confirmDelete(type) {
     if (idsToDelete.length === 0) return;
 
     if (type === 'everyone') {
-        // Update is_revoked = true for these IDs
-        // Security: RLS ensures I can only update my own messages usually.
-        // We'll trust the server to reject if I don't own them, but client check helps.
+        // "Revoke" / "Delete for Everyone"
+        // MATCHING OFFLINE BEHAVIOR: Wipe content.
+
+        const updates = {
+            message: "🚫 This message was deleted",
+            file_url: null,
+            file_type: null,
+            is_revoked: true
+        };
 
         try {
             const { error } = await supabase
                 .from('messages')
-                .update({ is_revoked: true })
+                .update(updates)
                 .in('id', idsToDelete)
-                .eq('sender', currentUser.user_id); // Double check ownership
+                .eq('sender', currentUser.user_id); // Security check
 
             if (error) {
                 showAlert("Failed to delete for everyone", "danger");
             } else {
-                showAlert("Messages revoked", "success");
+                showAlert("Messages deleted", "success");
             }
         } catch (e) {
             console.error(e);
         }
 
     } else {
-        // Delete for Me (Local only for now, as DB doesn't support 'hide')
-        idsToDelete.forEach(id => {
-            removeMsgFromUI(id);
-            messageCache.forEach(msgs => {
-                const idx = msgs.findIndex(m => m.id == id);
-                if (idx > -1) msgs.splice(idx, 1);
+        // Delete for Me
+        // Since Supabase doesn't have "hidden_for_user" array logic yet without complex table changes,
+        // we will implement LOCAL hide for this session + set "deleted_by_sender/receiver" flags if we added them.
+        // The offline code had `deleted_by_sender/receiver`.
+        // Our schema has them! 
+
+        // We need to determine if I am sender or receiver for EACH message to set correct flag.
+        // Bulk update is tricky if mixed.
+        // We'll iterate for now or do two queries.
+
+        try {
+            // 1. messages where I am sender
+            await supabase.from('messages')
+                .update({ deleted_by_sender: true })
+                .in('id', idsToDelete)
+                .eq('sender', currentUser.user_id);
+
+            // 2. messages where I am receiver
+            await supabase.from('messages')
+                .update({ deleted_by_receiver: true })
+                .in('id', idsToDelete)
+                .eq('receiver', currentUser.user_id);
+
+            // Remove from UI immediately
+            idsToDelete.forEach(id => {
+                removeMsgFromUI(id);
+                // cache update
+                const msgs = messageCache.get(currentChat);
+                if (msgs) {
+                    const idx = msgs.findIndex(m => m.id == id);
+                    if (idx > -1) msgs.splice(idx, 1);
+                }
             });
-        });
-        showAlert("Messages removed from view", "info");
+
+            showAlert("Messages removed from view", "info");
+
+        } catch (e) {
+            console.error("Delete for me error", e);
+        }
     }
 
     if (isBulkDelete) {
@@ -624,15 +694,83 @@ messagesBox.addEventListener('click', (e) => {
 
 // ================= BLOCK & CLEAR ACTIONS =================
 async function blockUser() {
-    showAlert("Blocking is not supported in this version yet.", "warning");
+    if (!currentChat) return;
+
+    try {
+        const { data, error } = await supabase
+            .from('blocked_users')
+            .select('*')
+            .eq('blocker_id', currentUser.user_id)
+            .eq('blocked_id', currentChat)
+            .single();
+
+        if (data) {
+            // Unblock
+            await supabase.from('blocked_users').delete().eq('blocker_id', currentUser.user_id).eq('blocked_id', currentChat);
+            showAlert("User unblocked", "success");
+            document.getElementById("blockUserBtn").innerHTML = '<i class="fas fa-ban"></i> Block User';
+        } else {
+            // Block
+            await supabase.from('blocked_users').insert({
+                blocker_id: currentUser.user_id,
+                blocked_id: currentChat
+            });
+            showAlert("User blocked", "warning");
+            document.getElementById("blockUserBtn").innerHTML = '<i class="fas fa-check-circle"></i> Unblock User';
+        }
+
+    } catch (e) {
+        console.error(e);
+        showAlert("Error updating block status", "danger");
+    }
 }
 
 async function checkBlockStatus() {
-    // Placeholder
+    if (!currentChat) return;
+    try {
+        const { data } = await supabase
+            .from('blocked_users')
+            .select('*')
+            .eq('blocker_id', currentUser.user_id)
+            .eq('blocked_id', currentChat)
+            .single();
+
+        const btn = document.getElementById("blockUserBtn");
+        if (btn) {
+            if (data) {
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Unblock User';
+            } else {
+                btn.innerHTML = '<i class="fas fa-ban"></i> Block User';
+            }
+        }
+    } catch (e) { }
 }
 
 async function clearChat() {
-    showAlert("Clearing chat history is not supported in this version.", "warning");
+    if (!currentChat) return;
+    if (!confirm("Are you sure? This will hide current messages from your view.")) return;
+
+    try {
+        // Upsert logic for chat_clear_history
+        const { error } = await supabase
+            .from('chat_clear_history')
+            .upsert({
+                user_id: currentUser.user_id,
+                partner_id: currentChat,
+                cleared_at: new Date().toISOString()
+            });
+
+        if (!error) {
+            showAlert("Chat history cleared", "info");
+            // Clear local cache and UI
+            messageCache.set(currentChat, []);
+            loadMessages(currentChat); // Reload (will filter by date)
+        } else {
+            showAlert("Failed to clear chat", "danger");
+        }
+    } catch (e) {
+        console.error(e);
+    }
 }
 
 // ================= GLOBAL ESC HANDLER =================

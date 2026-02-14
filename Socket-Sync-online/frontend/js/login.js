@@ -238,6 +238,36 @@ document.addEventListener('DOMContentLoaded', () => {
                         localStorage.setItem("currentUser", JSON.stringify(currentUser));
                     }
 
+                    // Update Login Streak
+                    try {
+                        const now = new Date();
+                        const lastLogin = profile.last_login ? new Date(profile.last_login) : null;
+                        let streak = profile.login_streak || 0;
+
+                        if (lastLogin) {
+                            const diff = now - lastLogin;
+                            const oneDay = 24 * 60 * 60 * 1000;
+                            if (diff > oneDay && diff < (oneDay * 2)) {
+                                streak++;
+                            } else if (diff > (oneDay * 2)) {
+                                streak = 1;
+                            }
+                        } else {
+                            streak = 1;
+                        }
+
+                        await supabase
+                            .from('profiles')
+                            .update({
+                                last_login: now.toISOString(),
+                                login_streak: streak
+                            })
+                            .eq('id', profile.id);
+
+                    } catch (e) {
+                        console.error("Streak access/update failed", e);
+                    }
+
                     window.location.href = "/chat";
                 }
             } catch (err) {

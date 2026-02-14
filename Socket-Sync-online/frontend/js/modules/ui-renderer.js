@@ -9,6 +9,18 @@ async function loadMessages(partnerId) {
     if (!currentUser) return;
 
     try {
+        // 1. Check for "Chat Clear" history
+        let clearTime = null;
+        try {
+            const { data: clearData } = await supabase
+                .from('chat_clear_history')
+                .select('cleared_at')
+                .eq('user_id', currentUser.user_id)
+                .eq('partner_id', partnerId)
+                .single();
+            if (clearData) clearTime = new Date(clearData.cleared_at);
+        } catch (e) { }
+
         const { data: msgs, error } = await supabase
             .from('messages')
             .select('*')
@@ -20,24 +32,28 @@ async function loadMessages(partnerId) {
             return;
         }
 
-        // Renormalize if needed (already matches mostly)
-        // Adjust for UI expectations if field names differ
-        // UI expects: id, from, to, message, file_url, file_type, timestamp
-        // DB has: id, sender, receiver, message, file_url, file_type, timestamp
-        // We can map it on the fly or adjust UI to use sender/receiver. 
-        // Let's map it to keep UI consistent with `handleIncomingMessage` in socket-client.js
+        // Filter and Map
+        const uiMsgs = [];
+        msgs.forEach(m => {
+            // Clear check
+            if (clearTime && new Date(m.timestamp) <= clearTime) return;
 
-        const uiMsgs = msgs.map(m => ({
-            id: m.id,
-            from: m.sender,
-            to: m.receiver,
-            message: m.message,
-            file_url: m.file_url,
-            file_type: m.file_type,
-            timestamp: m.timestamp,
-            status: m.status,
-            is_revoked: m.is_revoked
-        }));
+            // Delete for me check
+            if (m.sender === currentUser.user_id && m.deleted_by_sender) return;
+            if (m.receiver === currentUser.user_id && m.deleted_by_receiver) return;
+
+            uiMsgs.push({
+                id: m.id,
+                from: m.sender,
+                to: m.receiver,
+                message: m.message,
+                file_url: m.file_url,
+                file_type: m.file_type,
+                timestamp: m.timestamp,
+                status: m.status,
+                is_revoked: m.is_revoked
+            });
+        });
 
         messageCache.set(partnerId, uiMsgs);
         uiMsgs.forEach(m => showMsg(m));

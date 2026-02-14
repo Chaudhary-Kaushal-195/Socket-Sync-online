@@ -73,10 +73,33 @@ begin
 end;
 $$ language plpgsql security definer set search_path = public;
 
-create trigger on_auth_user_created
-  after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- BLOCKED USERS
+create table blocked_users (
+  blocker_id uuid references profiles(id) on delete cascade not null,
+  blocked_id uuid references profiles(id) on delete cascade not null,
+  timestamp timestamp with time zone default timezone('utc'::text, now()) not null,
+  primary key (blocker_id, blocked_id)
+);
+
+alter table blocked_users enable row level security;
+create policy "Users can see who they blocked or who blocked them." on blocked_users for select using (auth.uid() = blocker_id or auth.uid() = blocked_id);
+create policy "Users can block others." on blocked_users for insert with check (auth.uid() = blocker_id);
+create policy "Users can unblock others." on blocked_users for delete using (auth.uid() = blocker_id);
+
+-- CHAT CLEAR HISTORY
+create table chat_clear_history (
+  user_id uuid references profiles(id) on delete cascade not null,
+  partner_id uuid references profiles(id) on delete cascade not null,
+  cleared_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  primary key (user_id, partner_id)
+);
+
+alter table chat_clear_history enable row level security;
+create policy "Users can manage their own clear history." on chat_clear_history for all using (auth.uid() = user_id);
 
 -- ENABLE REALTIME
 alter publication supabase_realtime add table messages;
 alter publication supabase_realtime add table contacts;
+alter publication supabase_realtime add table blocked_users;
