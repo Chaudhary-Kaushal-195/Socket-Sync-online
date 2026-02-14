@@ -112,6 +112,9 @@ async function loadUsers() {
 
             const div = document.createElement("div");
             div.className = "chat-item";
+            if (window.onlineUsers && window.onlineUsers.has(p.id)) {
+                div.classList.add("online");
+            }
             div.id = `chat-item-${p.id}`;
             div.dataset.id = p.id;
 

@@ -33,9 +33,73 @@ function setupSupabaseRealtime() {
                 handleRealtimeEvent(payload);
             }
         )
-        .subscribe((status) => {
+        .on('presence', { event: 'sync' }, () => {
+            const state = realtimeChannel.presenceState();
+            console.log('Presence Sync:', state);
+
+            // Rebuild onlineUsers Set
+            onlineUsers.clear();
+            for (const key in state) {
+                // key is likely user_id if we set it, or random UUID. 
+                // Supabase presenceState returns object with keys.
+                // state[key] is array of presences.
+                state[key].forEach(p => {
+                    if (p.user_id) onlineUsers.add(p.user_id);
+                });
+            }
+            updateAllUserStatuses();
+        })
+        .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+            console.log('Presence Join:', newPresences);
+            newPresences.forEach(p => {
+                if (p.user_id) {
+                    onlineUsers.add(p.user_id);
+                    updateUserStatusUI(p.user_id, true);
+                }
+            });
+        })
+        .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+            console.log('Presence Leave:', leftPresences);
+            leftPresences.forEach(p => {
+                if (p.user_id) {
+                    onlineUsers.delete(p.user_id);
+                    updateUserStatusUI(p.user_id, false);
+                }
+            });
+        })
+        .subscribe(async (status) => {
             console.log("Supabase Realtime status:", status);
+            if (status === 'SUBSCRIBED') {
+                // TRACK PRESENCE
+                const presenceTrackStatus = await realtimeChannel.track({
+                    user_id: currentUser.user_id,
+                    online_at: new Date().toISOString(),
+                });
+                console.log("Presence tracking:", presenceTrackStatus);
+
+                markAllDelivered();
+            }
         });
+}
+
+function updateAllUserStatuses() {
+    // Iterate all chat items and set status
+    const items = document.querySelectorAll('.chat-item');
+    items.forEach(item => {
+        const uid = item.dataset.id;
+        if (uid) {
+            if (onlineUsers.has(uid)) item.classList.add('online');
+            else item.classList.remove('online');
+        }
+    });
+}
+
+function updateUserStatusUI(userId, isOnline) {
+    const item = document.getElementById(`chat-item-${userId}`);
+    if (item) {
+        if (isOnline) item.classList.add('online');
+        else item.classList.remove('online');
+    }
 }
 
 function handleRealtimeEvent(payload) {
@@ -256,29 +320,14 @@ function markAsDelivered(msgId) {
 }
 
 function markAllDelivered() {
-    if (!currentUser) {
-        console.error("markAllDelivered: No currentUser");
-        return;
-    }
-    console.log("Marking all pending messages as delivered for:", currentUser.user_id);
-
-    // Explicitly select first to see count? Or just update.
-    // Update and return count
+    if (!currentUser) return;
+    console.log("Marking all pending messages as delivered...");
     supabase.from('messages')
         .update({ status: 'delivered' })
         .eq('receiver', currentUser.user_id)
         .eq('status', 'sent')
-        .select() // Return updated rows
-        .then(({ data, error }) => {
-            if (error) {
-                console.error("Sync Error:", error);
-                // alert("Sync Error: " + error.message);
-            } else {
-                console.log("Synced messages:", data.length);
-                if (data.length > 0) {
-                    // alert(`Synced ${data.length} messages to Delivered!`);
-                }
-            }
+        .then(res => {
+            console.log("Marked all pending as delivered:", res);
         });
 }
 

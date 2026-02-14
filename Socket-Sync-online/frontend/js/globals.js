@@ -10,6 +10,7 @@ const API_BASE = ""; // Not needed for Supabase (direct connection)
 var currentUser = null;
 var currentChat = null;
 const messageCache = new Map(); // <userId, Array<Message>>
+const onlineUsers = new Set(); // <userId>
 let msgQueue = JSON.parse(localStorage.getItem("msgQueue") || "[]");
 let selectedFiles = [];
 
@@ -17,6 +18,7 @@ let selectedFiles = [];
 window.currentUser = currentUser;
 window.currentChat = currentChat;
 window.messageCache = messageCache;
+window.onlineUsers = onlineUsers;
 
 // ================= DOM ELEMENTS (COMMON) =================
 const chatHeaderTitle = document.getElementById("chatHeaderTitle");
