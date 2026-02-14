@@ -14,7 +14,7 @@ if (storedUser) {
     if (meEl) meEl.innerText = window.currentUser.name;
 
     const meMobileEl = document.getElementById("me-mobile");
-    if (meMobileEl) meMobileEl.innerText = `Welcome back, ${window.currentUser.name}`;
+    if (meMobileEl) meMobileEl.innerHTML = `Welcome back, <span class="mobile-username">${window.currentUser.name}</span>`;
     // socket.emit("join") REMOVED
 
     // Load Theme
