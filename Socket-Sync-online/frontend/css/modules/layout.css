@@ -178,6 +178,13 @@ body.light-mode .sidebar-toggle-btn:hover {
     /* z-index: 1;  Removed to allow sidebar to overlay header */
 }
 
+/* Force override of Bootstrap gutter for all children of main-row */
+.main-row>* {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin: 0 !important;
+}
+
 /* ========== LEFT SIDEBAR ========== */
 .sidebar {
     background: var(--glass-bg-dark);
