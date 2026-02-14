@@ -8,23 +8,22 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 // Check if supabase is defined (loaded via CDN)
 // Check if supabase is defined (loaded via CDN)
-let supabase;
+// Check if supabase is already initialized
+if (!window.supabase) {
+    // The CDN exposes the library as 'supabase' or 'Supabase' on window.
+    // We need to extract createClient from it.
+    const lib = window.supabase || window.Supabase;
 
-// The CDN exposes the library as 'supabase' or 'Supabase' on window.
-// We need to extract createClient from it.
-const lib = window.supabase || window.Supabase;
-
-if (lib && lib.createClient) {
-    supabase = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log("Supabase Client Initialized");
-} else if (typeof createClient !== 'undefined') {
-    // Fallback if createClient is somehow global (unlikely for v2 CDN)
-    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log("Supabase Client Initialized (Global)");
+    if (lib && lib.createClient) {
+        window.supabase = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log("Supabase Client Initialized");
+    } else if (typeof createClient !== 'undefined') {
+        // Fallback if createClient is somehow global (unlikely for v2 CDN)
+        window.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log("Supabase Client Initialized (Global)");
+    } else {
+        console.error("Supabase JS Library not found! Make sure to include the CDN link in your HTML.");
+    }
 } else {
-    console.error("Supabase JS Library not found! Make sure to include the CDN link in your HTML.");
+    console.log("Supabase Client already initialized");
 }
-
-// Export if using ES modules, but globals.js usage suggests global scope.
-// We'll keep it in global scope for now to match current architecture.
-window.supabase = supabase;
