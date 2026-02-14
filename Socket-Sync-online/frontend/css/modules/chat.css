@@ -38,7 +38,7 @@
     border-radius: 0 var(--radius-md) var(--radius-md) 0;
     /* Flatten left side */
     margin: 12px 12px 0 0;
-    /* No left margin */
+    /* No left margin - Force Update */
     display: flex;
     align-items: center;
     gap: 16px;
