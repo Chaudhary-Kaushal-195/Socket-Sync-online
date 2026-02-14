@@ -409,7 +409,7 @@ async function confirmDelete(type) {
         // MATCHING OFFLINE BEHAVIOR: Wipe content.
 
         const updates = {
-            message: "🚫 This message was deleted",
+            message: "This message was deleted",
             file_url: null,
             file_type: null,
             is_revoked: true

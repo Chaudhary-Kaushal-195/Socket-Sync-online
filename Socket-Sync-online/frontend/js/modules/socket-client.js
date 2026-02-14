@@ -300,9 +300,8 @@ function handleMessageUpdate(msg) {
             if (el) {
                 // 1. Revoked
                 if (local.is_revoked) {
-                    el.querySelector(".msg-content").innerHTML = `<i class="fas fa-ban"></i> Message revoked`;
-                    el.querySelector(".msg-content").style.fontStyle = "italic";
-                    el.querySelector(".msg-content").style.color = "var(--text-secondary)";
+                    el.querySelector(".msg-content").innerHTML = `This message was deleted`;
+                    el.classList.add("deleted");
                     el.classList.remove("has-media", "msg-media");
                     // Remove media elements
                     const mediaEls = el.querySelectorAll(".media-box, .chat-video, .chat-audio, .file-card");
