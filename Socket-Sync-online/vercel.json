@@ -22,20 +22,20 @@
             "destination": "/frontend/pages/oauth-callback.html"
         },
         {
-            "source": "/js/(.*)",
-            "destination": "/frontend/js/$1"
+            "source": "/css/:path*",
+            "destination": "/frontend/css/:path*"
         },
         {
-            "source": "/css/(.*)",
-            "destination": "/frontend/css/$1"
+            "source": "/js/:path*",
+            "destination": "/frontend/js/:path*"
         },
         {
-            "source": "/material/(.*)",
-            "destination": "/frontend/material/$1"
+            "source": "/material/:path*",
+            "destination": "/frontend/material/:path*"
         },
         {
-            "source": "/pages/(.*)",
-            "destination": "/frontend/pages/$1"
+            "source": "/pages/:path*",
+            "destination": "/frontend/pages/:path*"
         }
     ]
 }

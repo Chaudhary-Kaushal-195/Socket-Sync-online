@@ -297,22 +297,29 @@ if (suFile) {
         };
         reader.readAsDataURL(file);
 
-        // Upload immediately (or could do at signup, but immediate is easier for state)
-        const formData = new FormData();
-        formData.append('file', file);
-
+        // Upload to Supabase Storage
         try {
-            const r = await fetch(`${API_BASE}/upload`, {
-                method: "POST",
-                body: formData
-            });
-            const data = await r.json();
-            if (data.file_url) {
-                uploadedAvatarUrl = data.file_url; // Store relative path
-            }
+            if (!window.supabase) throw new Error("Supabase client not initialized");
+
+            const fileExt = file.name.split('.').pop();
+            const fileName = `avatars/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+            const { data, error } = await supabase.storage
+                .from('chat-media')
+                .upload(fileName, file);
+
+            if (error) throw error;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('chat-media')
+                .getPublicUrl(fileName);
+
+            uploadedAvatarUrl = publicUrl;
+            console.log("Avatar uploaded:", uploadedAvatarUrl);
+
         } catch (e) {
             console.error("Avatar upload failed", e);
-            alert("Failed to upload avatar image");
+            alert("Failed to upload avatar image: " + e.message);
         }
     });
 }
