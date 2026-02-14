@@ -7,11 +7,17 @@ const socket = null; // Placeholder to prevent crash in un-migrated files for no
 const API_BASE = ""; // Not needed for Supabase (direct connection)
 
 // ================= GLOBALS =================
-let currentUser = null;
-let currentChat = null;
+// ================= GLOBALS =================
+var currentUser = null;
+var currentChat = null;
 const messageCache = new Map(); // <userId, Array<Message>>
 let msgQueue = JSON.parse(localStorage.getItem("msgQueue") || "[]");
 let selectedFiles = [];
+
+// Expose to window to ensure access across scripts
+window.currentUser = currentUser;
+window.currentChat = currentChat;
+window.messageCache = messageCache;
 
 // ================= DOM ELEMENTS (COMMON) =================
 const chatHeaderTitle = document.getElementById("chatHeaderTitle");

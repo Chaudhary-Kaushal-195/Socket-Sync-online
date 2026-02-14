@@ -8,8 +8,9 @@ let ctxTarget = null;
 // Load User
 const storedUser = localStorage.getItem("currentUser");
 if (storedUser) {
-    currentUser = JSON.parse(storedUser);
-    document.getElementById("me").innerText = currentUser.name;
+    window.currentUser = JSON.parse(storedUser);
+    currentUser = window.currentUser; // Update local ref if any
+    document.getElementById("me").innerText = window.currentUser.name;
     // socket.emit("join") REMOVED
 
     // Load Theme
