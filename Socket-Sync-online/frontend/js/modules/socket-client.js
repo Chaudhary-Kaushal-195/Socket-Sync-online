@@ -256,14 +256,29 @@ function markAsDelivered(msgId) {
 }
 
 function markAllDelivered() {
-    if (!currentUser) return;
-    console.log("Marking all pending messages as delivered...");
+    if (!currentUser) {
+        console.error("markAllDelivered: No currentUser");
+        return;
+    }
+    console.log("Marking all pending messages as delivered for:", currentUser.user_id);
+
+    // Explicitly select first to see count? Or just update.
+    // Update and return count
     supabase.from('messages')
         .update({ status: 'delivered' })
         .eq('receiver', currentUser.user_id)
         .eq('status', 'sent')
-        .then(res => {
-            console.log("Marked all pending as delivered:", res);
+        .select() // Return updated rows
+        .then(({ data, error }) => {
+            if (error) {
+                console.error("Sync Error:", error);
+                // alert("Sync Error: " + error.message);
+            } else {
+                console.log("Synced messages:", data.length);
+                if (data.length > 0) {
+                    // alert(`Synced ${data.length} messages to Delivered!`);
+                }
+            }
         });
 }
 
