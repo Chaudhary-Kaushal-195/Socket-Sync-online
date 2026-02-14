@@ -251,7 +251,19 @@ function markAsDelivered(msgId) {
         .eq('id', msgId)
         .eq('status', 'sent')
         .then(res => {
-            // console.log("Marked as delivered", res);
+            console.log("Marked as delivered:", msgId, res);
+        });
+}
+
+function markAllDelivered() {
+    if (!currentUser) return;
+    console.log("Marking all pending messages as delivered...");
+    supabase.from('messages')
+        .update({ status: 'delivered' })
+        .eq('receiver', currentUser.user_id)
+        .eq('status', 'sent')
+        .then(res => {
+            console.log("Marked all pending as delivered:", res);
         });
 }
 
@@ -261,3 +273,4 @@ function playNotificationSound() {
 
 // Export for chat.js
 window.setupSupabaseRealtime = setupSupabaseRealtime;
+window.markAllDelivered = markAllDelivered;
