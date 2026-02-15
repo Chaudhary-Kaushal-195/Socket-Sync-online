@@ -403,11 +403,10 @@ async function onScanSuccess(decodedText, decodedResult) {
                     }
                 }
 
-                /*
-                async function handleSocialLogin(firebaseUser) {
-                    // Legacy Firebase Code Removed
-                }
-                */
+/*
+async function handleSocialLogin(firebaseUser) {
+    // Legacy Firebase Code Removed
+}
+*/
 
-                // Make globally available for HTML onclick
-            });
+// Make globally available for HTML onclick
