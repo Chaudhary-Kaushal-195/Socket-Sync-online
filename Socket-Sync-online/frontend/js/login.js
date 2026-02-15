@@ -379,9 +379,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             .insert(newProfile);
 
                         if (createError) {
-                            console.error("Profile creation failed:", createError);
-                            alert("Login Error: Could not create user profile.");
-                            return;
+                            // If it's a unique constraint violation (23505), it means the profile DOES exist.
+                            // This can happen due to race conditions with triggers or concurrent requests.
+                            if (createError.code === '23505') {
+                                console.log("Profile already exists (race condition), proceeding with login.");
+                            } else {
+                                console.error("Profile creation failed:", createError);
+                                alert("Login Error: Could not create user profile (" + createError.message + ")");
+                                return;
+                            }
                         }
 
                         const currentUser = {
