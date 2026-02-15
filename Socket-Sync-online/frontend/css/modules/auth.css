@@ -132,6 +132,8 @@ body.menu-active .auth-box {
     animation: authBoxEnter var(--duration-slower) var(--ease-spring);
     margin: 0 auto;
     /* Center it */
+    height: auto;
+    /* Ensure it fits content */
 }
 
 /* Gradient border for info modals */
