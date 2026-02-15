@@ -172,7 +172,7 @@
 }
 
 .media-modal.hidden {
-    display: none;
+    display: none !important;
 }
 
 .media-close {
