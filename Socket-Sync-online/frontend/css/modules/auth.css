@@ -803,6 +803,34 @@ body.light-mode .github-btn i {
         white-space: nowrap;
     }
 
+    .auth-nav-logo:hover {
+        animation: shake-mobile 0.4s ease-in-out both;
+    }
+
+    @keyframes shake-mobile {
+
+        0%,
+        100% {
+            transform: translate(-50%, -50%);
+        }
+
+        20% {
+            transform: translate(calc(-50% - 2px), -50%);
+        }
+
+        40% {
+            transform: translate(calc(-50% + 2px), -50%);
+        }
+
+        60% {
+            transform: translate(calc(-50% - 2px), -50%);
+        }
+
+        80% {
+            transform: translate(calc(-50% + 2px), -50%);
+        }
+    }
+
     .auth-btn-sm {
         order: 3;
         padding: 6px 14px;
