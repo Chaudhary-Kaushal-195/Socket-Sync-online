@@ -7,7 +7,51 @@ let ctxTarget = null;
 
 // Load User
 // Load User
+// Load User
 const storedUser = localStorage.getItem("currentUser");
+let currentUser = null;
+if (storedUser) {
+    currentUser = JSON.parse(storedUser);
+
+    // [SELF-REPAIR] Ensure Profile Exists in DB (Fix for Zombie Sessions)
+    (async () => {
+        try {
+            if (!currentUser || !currentUser.user_id) return;
+
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('id', currentUser.user_id)
+                .single();
+
+            if (error || !data) {
+                console.warn("Profile missing in DB (Zombie Session). Recreating...");
+                // Re-creating profile based on local data
+                const result = await supabase.from('profiles').insert({
+                    id: currentUser.user_id,
+                    user_id: currentUser.email,
+                    name: currentUser.name,
+                    avatar: currentUser.avatar,
+                    last_login: new Date().toISOString()
+                });
+
+                if (result.error) {
+                    console.error("Failed to recover profile:", result.error);
+                    // If we can't recover, we should probably logout to force clean state
+                    if (result.error.code !== '23505') { // Ignore unique conflict (good race condition)
+                        console.error("Critical Profile Error. Logging out.");
+                        // localStorage.removeItem("currentUser");
+                        // window.location.href = "/login";
+                    }
+                } else {
+                    console.log("Profile recovered successfully.");
+                }
+            }
+        } catch (err) {
+            console.error("Self-repair check failed:", err);
+        }
+    })();
+}
 
 // ================= AUTH HANDLER (OAuth & Session) =================
 // Listen for Auth Changes (Google/GitHub Redirects)

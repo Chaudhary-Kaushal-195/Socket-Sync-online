@@ -364,13 +364,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (profileError) {
                         console.error("Profile fetch error", profileError);
-                        // Fallback using auth metadata if profile fails
+                        // Profile missing? Create it!
                         const userMeta = data.session.user.user_metadata;
-                        const currentUser = {
-                            user_id: data.session.user.id, // UUID
-                            email: data.session.user.email,
+                        const newProfile = {
+                            id: data.session.user.id, // UUID
+                            user_id: data.session.user.email,
                             name: userMeta.name || email.split('@')[0],
-                            avatar: userMeta.avatar || "https://ui-avatars.com/api/?name=User"
+                            avatar: userMeta.avatar || "https://ui-avatars.com/api/?name=User",
+                            last_login: new Date().toISOString()
+                        };
+
+                        const { error: createError } = await supabase
+                            .from('profiles')
+                            .insert(newProfile);
+
+                        if (createError) {
+                            console.error("Profile creation failed:", createError);
+                            alert("Login Error: Could not create user profile.");
+                            return;
+                        }
+
+                        const currentUser = {
+                            user_id: newProfile.id,
+                            email: newProfile.user_id,
+                            name: newProfile.name,
+                            avatar: newProfile.avatar
                         };
                         localStorage.setItem("currentUser", JSON.stringify(currentUser));
                     } else {
