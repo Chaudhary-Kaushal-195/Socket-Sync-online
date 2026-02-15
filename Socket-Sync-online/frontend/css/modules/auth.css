@@ -2,6 +2,15 @@
    AUTHENTICATION PAGES - Modern Glassmorphism
    ========================================= */
 
+html,
+body {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+    margin: 0;
+    padding: 0;
+}
+
 .auth-body {
     display: flex;
     justify-content: center;
@@ -9,6 +18,8 @@
     background: #050508;
     position: relative;
     overflow: hidden;
+    min-height: 100vh;
+    /* Ensure full height */
 }
 
 /* Animated gradient orbs */
