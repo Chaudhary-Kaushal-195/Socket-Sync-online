@@ -8,8 +8,9 @@ let ctxTarget = null;
 // Load User
 // Load User
 // Load User
+// Load User
 const storedUser = localStorage.getItem("currentUser");
-let currentUser = null;
+// currentUser is global from globals.js
 if (storedUser) {
     currentUser = JSON.parse(storedUser);
 
