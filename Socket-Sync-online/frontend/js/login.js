@@ -137,8 +137,26 @@ async function onScanSuccess(decodedText, decodedResult) {
         }
         else if (payload.type === "profile") {
             // User scanned a profile QR
-            alert(`Found User: ${payload.name} (${payload.email})\n\nPlease log in to add them to your contacts.`);
-            window.location.reload();
+            const uidInput = document.getElementById("uid");
+            if (uidInput) {
+                // We are on the login page
+                uidInput.value = payload.email || "";
+
+                // Focus password field
+                const pwdInput = document.getElementById("pwd");
+                if (pwdInput) pwdInput.focus();
+
+                // Hide scanner logic/UI if strictly needed, but reload might be cleaner to stop scanner? 
+                // Actually, stopping scanner manually is better UX than reload for autofill.
+                document.getElementById('qr-reader').style.display = "none";
+
+                // Optional: Trigger input event for any validation listeners
+                uidInput.dispatchEvent(new Event('input'));
+            } else {
+                // We are likely inside the app (e.g. Add Contact modal)
+                alert(`Found User: ${payload.email}\n\nPlease log in to add them to your contacts.`);
+                window.location.reload();
+            }
         }
         else {
             alert("Unknown QR Code Type: " + payload.type);
