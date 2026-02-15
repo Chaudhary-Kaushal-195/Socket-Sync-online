@@ -409,14 +409,22 @@ window.linkNewDevice = function () {
     }
 }
 
-window.closeLinkDeviceModal = function () {
+window.closeLinkDeviceModal = async function () {
     const modal = document.getElementById("linkDeviceModal");
     if (modal) {
         modal.classList.add("hidden");
         modal.style.display = "none";
     }
     if (linkDeviceScanner) {
-        linkDeviceScanner.clear().catch(e => { });
+        try {
+            // Check if running (state 2) or paused (3)
+            if (linkDeviceScanner.getState && (linkDeviceScanner.getState() === 2 || linkDeviceScanner.getState() === 3)) {
+                await linkDeviceScanner.stop();
+            }
+            await linkDeviceScanner.clear();
+        } catch (e) {
+            console.warn("Error stopping scanner:", e);
+        }
         linkDeviceScanner = null;
     }
 }
