@@ -395,26 +395,31 @@ body.menu-active .auth-box {
     /* transform: scale(1.02); */
     /* Removed vibration effect */
     opacity: 1;
-    animation: shake 0.5s ease-in-out both;
+    opacity: 1;
+    animation: shake 0.4s ease-in-out both;
 }
 
 @keyframes shake {
 
     0%,
     100% {
-        transform: rotate(0deg);
+        transform: translateX(0);
     }
 
-    25% {
-        transform: rotate(-3deg);
+    20% {
+        transform: translateX(-2px);
     }
 
-    50% {
-        transform: rotate(3deg);
+    40% {
+        transform: translateX(2px);
     }
 
-    75% {
-        transform: rotate(-1deg);
+    60% {
+        transform: translateX(-2px);
+    }
+
+    80% {
+        transform: translateX(2px);
     }
 }
 
@@ -422,11 +427,6 @@ body.menu-active .auth-box {
     height: 36px;
     border-radius: var(--radius-xs);
     transition: all var(--duration-fast) var(--ease-smooth);
-}
-
-.auth-nav-logo:hover img {
-    /* transform: rotate(-5deg); */
-    /* Removed rotation */
 }
 
 .auth-nav-links {
