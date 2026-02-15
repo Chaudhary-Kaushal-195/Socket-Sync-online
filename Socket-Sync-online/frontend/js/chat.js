@@ -166,7 +166,7 @@ if (storedUser) {
             if (!localStorage.getItem("currentUser")) {
                 window.location.href = "/login";
             }
-        }, 3000);
+        }, 1000);
     } else {
         console.log("Processing Social Login Redirect...");
     }
