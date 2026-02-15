@@ -79,7 +79,7 @@ body {
     transition: all var(--duration-slow) var(--ease-spring);
     position: relative;
     z-index: 1;
-    animation: authBoxEnter var(--duration-slower) var(--ease-spring);
+    /* animation: authBoxEnter var(--duration-slower) var(--ease-spring); */
 }
 
 @keyframes authBoxEnter {
@@ -301,7 +301,7 @@ body.menu-active .auth-box {
     display: flex;
     justify-content: center;
     align-items: center;
-    /* transition removed to prevent conflict with keyframe animations */
+    transition: all var(--duration-slow) var(--ease-spring);
     z-index: 10;
     padding-top: 70px;
 }
