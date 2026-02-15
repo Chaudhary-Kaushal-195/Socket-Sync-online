@@ -661,12 +661,30 @@ body.light-mode .github-btn i {
 
 @media (max-width: 768px) {
     .auth-nav {
-        padding: 0 20px;
+        padding: 0 16px;
         justify-content: space-between;
         align-items: center;
-        /* Enforce vertical center */
         position: relative;
-        /* For absolute centering of logo */
+        height: 60px;
+        /* Reduced height for mobile */
+    }
+
+    .carousel-view {
+        align-items: flex-start;
+        /* Allow scrolling for tall content */
+        overflow-y: auto;
+        padding-top: 80px;
+        /* Header (60) + Spacing (20) */
+        padding-bottom: 20px;
+    }
+
+    /* Adjust font sizes for mobile header */
+    .auth-nav-logo {
+        font-size: 1.1rem;
+    }
+
+    .auth-nav-logo img {
+        height: 30px;
     }
 
     .auth-burger {
@@ -677,7 +695,8 @@ body.light-mode .github-btn i {
         height: 40px;
         /* Match button height for alignment */
         width: 40px;
-        font-size: 1.5rem;
+        font-size: 1.3rem;
+        /* Slightly smaller icon */
         color: var(--text-primary);
         cursor: pointer;
         z-index: 2020;
@@ -699,8 +718,9 @@ body.light-mode .github-btn i {
 
     .auth-btn-sm {
         order: 3;
-        padding: 8px 16px;
-        font-size: 0.85rem;
+        padding: 6px 14px;
+        /* Smaller button */
+        font-size: 0.8rem;
         margin: 0;
         display: flex;
         align-items: center;
@@ -712,17 +732,24 @@ body.light-mode .github-btn i {
         left: 0;
         width: 100%;
         height: 100vh;
-        background: rgba(5, 5, 8, 0.95);
+        background: rgba(5, 5, 8, 0.98);
+        /* Less transparent for readability */
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        gap: 25px;
+        gap: 30px;
         transform: translateX(-100%);
         /* Slide from left */
         transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 2015;
+    }
+
+    /* Ensure auth-box doesn't touch edges */
+    .auth-box {
+        margin: 0 auto;
+        width: 90%;
     }
 
     /* Active state controlled by body class */
