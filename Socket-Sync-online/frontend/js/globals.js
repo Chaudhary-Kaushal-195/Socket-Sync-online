@@ -11,6 +11,7 @@ var currentUser = null;
 var currentChat = null;
 const messageCache = new Map(); // <userId, Array<Message>>
 const onlineUsers = new Set(); // <userId>
+const blockedUsers = new Set(); // <userId>
 let msgQueue = JSON.parse(localStorage.getItem("msgQueue") || "[]");
 let selectedFiles = [];
 
@@ -19,6 +20,7 @@ window.currentUser = currentUser;
 window.currentChat = currentChat;
 window.messageCache = messageCache;
 window.onlineUsers = onlineUsers;
+window.blockedUsers = blockedUsers;
 
 // ================= DOM ELEMENTS (COMMON) =================
 const chatHeaderTitle = document.getElementById("chatHeaderTitle");

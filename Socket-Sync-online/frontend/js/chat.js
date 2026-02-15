@@ -33,6 +33,7 @@ if (storedUser) {
 
 // Setup Supabase Realtime
 setupSupabaseRealtime();
+loadBlockedUsers();
 
 function logout() {
     supabase.auth.signOut().then(() => {
@@ -195,6 +196,13 @@ async function send() {
     if (!currentChat) return;
 
     const textMsg = msgInput.value.trim();
+
+    // Check if blocked
+    if (blockedUsers.has(currentChat)) {
+        showAlert("You have blocked this user. Unblock to send messages.", "danger");
+        return;
+    }
+
     // We can allow empty text if there is a file
     if (textMsg === "" && selectedFiles.length === 0) return;
 
@@ -710,6 +718,22 @@ messagesBox.addEventListener('click', (e) => {
 });
 
 // ================= BLOCK & CLEAR ACTIONS =================
+async function loadBlockedUsers() {
+    try {
+        const { data, error } = await supabase
+            .from('blocked_users')
+            .select('blocked_id')
+            .eq('blocker_id', currentUser.user_id);
+
+        if (data) {
+            blockedUsers.clear();
+            data.forEach(row => blockedUsers.add(row.blocked_id));
+        }
+    } catch (e) {
+        console.error("Error loading blocked users", e);
+    }
+}
+
 async function blockUser() {
     if (!currentChat) return;
 
@@ -724,6 +748,7 @@ async function blockUser() {
         if (data) {
             // Unblock
             await supabase.from('blocked_users').delete().eq('blocker_id', currentUser.user_id).eq('blocked_id', currentChat);
+            blockedUsers.delete(currentChat);
             showAlert("User unblocked", "success");
             document.getElementById("blockBtn").innerHTML = '<i class="fas fa-ban"></i> Block User';
         } else {
@@ -732,6 +757,7 @@ async function blockUser() {
                 blocker_id: currentUser.user_id,
                 blocked_id: currentChat
             });
+            blockedUsers.add(currentChat);
             showAlert("User blocked", "warning");
             document.getElementById("blockBtn").innerHTML = '<i class="fas fa-check-circle"></i> Unblock User';
         }

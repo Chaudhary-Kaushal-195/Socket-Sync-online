@@ -139,6 +139,12 @@ function handleRealtimeEvent(payload) {
         if (newRec.sender !== currentUser.user_id && newRec.receiver !== currentUser.user_id) {
             return;
         }
+
+        // 2. CHECK BLOCK: If I blocked the sender, ignore.
+        if (window.blockedUsers && window.blockedUsers.has(newRec.sender)) {
+            console.log("Ignored message from blocked user:", newRec.sender);
+            return;
+        }
     }
 
     if (eventType === 'INSERT') {
