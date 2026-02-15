@@ -663,27 +663,47 @@ body.light-mode .github-btn i {
     .auth-nav {
         padding: 0 20px;
         justify-content: space-between;
+        align-items: center;
+        /* Enforce vertical center */
         position: relative;
         /* For absolute centering of logo */
     }
 
     .auth-burger {
-        display: block;
+        display: flex;
+        /* Better for icon alignment */
+        align-items: center;
         order: 1;
+        height: 40px;
+        /* Match button height for alignment */
+        width: 40px;
+        font-size: 1.5rem;
+        color: var(--text-primary);
+        cursor: pointer;
+        z-index: 2020;
     }
 
     .auth-nav-logo {
         position: absolute;
         left: 50%;
-        transform: translateX(-50%);
+        top: 50%;
+        transform: translate(-50%, -50%);
+        /* Center perfectly */
         order: 2;
         width: auto;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
     }
 
     .auth-btn-sm {
         order: 3;
         padding: 8px 16px;
         font-size: 0.85rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
     }
 
     .auth-nav-links {
