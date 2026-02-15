@@ -392,7 +392,9 @@ body.menu-active .auth-box {
 }
 
 .auth-nav-logo:hover {
-    transform: scale(1.02);
+    /* transform: scale(1.02); */
+    /* Removed vibration effect */
+    opacity: 0.9;
 }
 
 .auth-nav-logo img {
@@ -402,7 +404,8 @@ body.menu-active .auth-box {
 }
 
 .auth-nav-logo:hover img {
-    transform: rotate(-5deg);
+    /* transform: rotate(-5deg); */
+    /* Removed rotation */
 }
 
 .auth-nav-links {
