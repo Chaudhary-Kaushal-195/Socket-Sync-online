@@ -10,8 +10,8 @@
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/style.css?v=36">
-    <link rel="stylesheet" href="../css/modals.css?v=36">
+    <link rel="stylesheet" href="../css/style.css?v=37">
+    <link rel="stylesheet" href="../css/modals.css?v=37">
     <!-- Socket.IO removed in favor of Supabase -->
 
 
@@ -373,6 +373,11 @@
                             </button>
                             <button class="footer-btn" onclick="openAnalyticsDashboard()">
                                 <i class="fas fa-pie-chart"></i> Analytics
+                            </button>
+                            <!-- Fallback Close Button -->
+                            <button class="footer-btn danger" onclick="closeProfileModal()"
+                                style="grid-column: span 4; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.3); margin-top: 10px;">
+                                <i class="fas fa-times-circle"></i> Close Profile
                             </button>
                         </div>
                     </div>

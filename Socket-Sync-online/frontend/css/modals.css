@@ -109,8 +109,9 @@
 }
 
 @media (max-width: 768px) {
+
+    /* Generic Media Modal (Images/Video) - Center Content */
     .media-modal {
-        /* Generic Media Modal (Images/Video) - Center Content */
         display: flex !important;
         flex-direction: column;
         justify-content: center;
@@ -124,7 +125,6 @@
         animation: none !important;
         border-radius: 0;
         overflow-y: auto;
-        /* Allow overflow if needed */
         -webkit-overflow-scrolling: touch;
         padding: 0;
         margin: 0;
@@ -133,6 +133,11 @@
         -webkit-backdrop-filter: none !important;
         z-index: 3000;
         pointer-events: auto;
+    }
+
+    /* CRITICAL FIX: Ensure hidden profile modal is actually hidden */
+    #profileModal.hidden {
+        display: none !important;
     }
 
     /* Explicity target Profile Modal for Block Layout */
@@ -173,15 +178,13 @@
         justify-content: center;
     }
 
-    /* SPECIFIC: Profile Modal Close Button - Use Sticky to scroll with content but stay visible */
+    /* SPECIFIC: Profile Modal Close Button - Revert to Fixed for Robustness */
     #profileModal .media-close {
-        position: sticky;
-        top: 10px;
-        margin-left: auto;
-        /* Push to right */
-        margin-right: 15px;
-        /* Spacing from edge */
-        margin-top: 10px;
+        position: fixed !important;
+        /* Force fixed relative to viewport */
+        top: 15px;
+        right: 15px;
+        margin: 0;
         z-index: 2147483647 !important;
         background: rgba(0, 0, 0, 0.6);
         border-radius: 50%;
@@ -190,8 +193,6 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: -54px;
-        /* Pull content up so button overlays banner */
     }
 
     /* Ensure images in media modal are sized correctly */
