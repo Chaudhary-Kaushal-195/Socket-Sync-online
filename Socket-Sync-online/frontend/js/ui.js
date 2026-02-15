@@ -81,7 +81,12 @@ async function openProfileModal() {
     avatarEl.src = currentUser.avatar;
 
     // Generate QR (Client-side using API)
-    // Generate QR (Client-side using API)
+    // Reset QR State
+    window.showingLoginQr = false;
+    const qrToggleBtn = document.getElementById("qrToggleBtn");
+    if (qrToggleBtn) qrToggleBtn.innerText = "Show Login QR (Secure)";
+
+    // Generate QR (Profile Default)
     const qrPayload = {
         type: 'profile',
         email: currentUser.email

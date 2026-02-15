@@ -135,6 +135,29 @@ async function onScanSuccess(decodedText, decodedResult) {
             alert("Login via QR is currently disabled during migration.");
             window.location.reload();
         }
+        else if (payload.type === "session") {
+            // Direct Login via Session QR
+            try {
+                // Stop scanner
+                document.getElementById('qr-reader').style.display = "none";
+
+                const { data, error } = await window.supabase.auth.setSession({
+                    refresh_token: payload.rt,
+                    access_token: payload.at
+                });
+
+                if (error) throw error;
+
+                // Session established. 
+                // We rely on chat.js/auth guard to fetch profile details on redirect.
+                window.location.href = "/chat";
+
+            } catch (e) {
+                console.error("Session Import Error", e);
+                alert("Login via QR failed: " + e.message);
+                window.location.reload();
+            }
+        }
         else if (payload.type === "profile") {
             // User scanned a profile QR
             const uidInput = document.getElementById("uid");
