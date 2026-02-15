@@ -296,15 +296,7 @@ async function shareQr() {
     }
 }
 
-async function viewStats() {
-    // We showed basic stats in modal. Detailed plot is Python-specific.
-    // For now just alert or show simple text.
-    showAlert("Detailed analytics dashboard is not available in serverless mode yet.", "info");
-}
 
-async function openAnalyticsDashboard() {
-    showAlert("Analytics Dashboard is currently disabled.", "warning");
-}
 
 // Profile Avatar Upload
 document.addEventListener('DOMContentLoaded', () => {
