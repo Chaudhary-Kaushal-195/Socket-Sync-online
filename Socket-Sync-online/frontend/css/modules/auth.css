@@ -395,8 +395,23 @@ body.menu-active .auth-box {
     /* transform: scale(1.02); */
     /* Removed vibration effect */
     opacity: 1;
-    text-shadow: 0 0 15px var(--primary-color);
-    /* Subtle glow instead of movement */
+    animation: shake 0.5s ease-in-out both;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-5px) rotate(-5deg);
+    }
+
+    75% {
+        transform: translateX(5px) rotate(5deg);
+    }
 }
 
 .auth-nav-logo img {
