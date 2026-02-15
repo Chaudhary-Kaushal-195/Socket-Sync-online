@@ -202,7 +202,9 @@ function setupChatEvents() {
     items.forEach(item => {
         item.addEventListener("click", () => {
             const userId = item.dataset.id;
-            const userName = item.querySelector(".chat-name").innerText;
+            // Fix: Select only the name span, not the unread badge
+            const nameEl = item.querySelector(".chat-name span");
+            const userName = nameEl ? nameEl.innerText : "User";
             const userAvatar = item.querySelector("img").src;
             openChat(userId, userName, userAvatar);
         });
