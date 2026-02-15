@@ -160,22 +160,38 @@
         /* Ensure no layer creation on dashboard */
     }
 
-    .media-close {
-        top: max(15px, env(safe-area-inset-top) + 15px);
-        /* Notch safe */
+    /* Generic Media Modal Close Button */
+    .media-modal .media-close {
+        top: 15px;
         right: 15px;
         position: fixed;
         z-index: 2147483647 !important;
-        background: rgba(0, 0, 0, 0.6);
-        width: 44px;
-        /* Larger touch target */
-        height: 44px;
         pointer-events: auto !important;
         cursor: pointer;
-        display: flex !important;
-        /* Force display */
+        display: flex;
         align-items: center;
         justify-content: center;
+    }
+
+    /* SPECIFIC: Profile Modal Close Button - Use Sticky to scroll with content but stay visible */
+    #profileModal .media-close {
+        position: sticky;
+        top: 10px;
+        margin-left: auto;
+        /* Push to right */
+        margin-right: 15px;
+        /* Spacing from edge */
+        margin-top: 10px;
+        z-index: 2147483647 !important;
+        background: rgba(0, 0, 0, 0.6);
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: -54px;
+        /* Pull content up so button overlays banner */
     }
 
     /* Ensure images in media modal are sized correctly */
