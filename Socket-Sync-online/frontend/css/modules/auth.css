@@ -709,7 +709,7 @@ body.light-mode .github-btn i {
     .auth-nav-links {
         position: fixed;
         top: 0;
-        right: 0;
+        left: 0;
         width: 100%;
         height: 100vh;
         background: rgba(5, 5, 8, 0.95);
@@ -719,14 +719,15 @@ body.light-mode .github-btn i {
         justify-content: center;
         align-items: center;
         gap: 25px;
-        transform: translateY(-100%);
+        transform: translateX(-100%);
+        /* Slide from left */
         transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 2015;
     }
 
     /* Active state controlled by body class */
     body.menu-active .auth-nav-links {
-        transform: translateY(0);
+        transform: translateX(0);
     }
 
     .auth-link {
