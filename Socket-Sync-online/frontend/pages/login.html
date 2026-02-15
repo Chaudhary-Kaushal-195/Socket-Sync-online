@@ -76,6 +76,15 @@
                 </button>
             </div>
 
+            <div style="margin-top: 10px;">
+                <input type="file" id="qr-input-file" accept="image/*" style="display: none;"
+                    onchange="handleQrFileUpload(this)">
+                <button onclick="document.getElementById('qr-input-file').click()" class="btn btn-outline-secondary"
+                    style="background: transparent; border: 1px solid var(--text-secondary); width: 100%; color: var(--text-secondary);">
+                    <i class="fas fa-file-image"></i> Upload QR Image
+                </button>
+            </div>
+
             <div id="qr-reader" style="width: 100%; margin-top: 10px; display:none;"></div>
         </div>
     </div>

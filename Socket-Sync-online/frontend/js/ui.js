@@ -115,6 +115,31 @@ async function toggleQrType() {
     }
 }
 
+async function downloadQr() {
+    const img = document.getElementById("myQrCode");
+    if (!img || !img.src) return;
+
+    try {
+        // Fetch the image to force download
+        const response = await fetch(img.src);
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = window.showingLoginQr ? "socket-sync-login-qr.png" : "socket-sync-profile-qr.png";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(blobUrl);
+
+    } catch (e) {
+        console.error("QR Download Error", e);
+        // Fallback: Open in new tab
+        window.open(img.src, '_blank');
+    }
+}
+
 // ================= PROFILE MODAL =================
 async function openProfileModal() {
     const modal = document.getElementById("profileModal");
