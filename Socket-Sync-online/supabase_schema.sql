@@ -18,6 +18,7 @@ alter table profiles enable row level security;
 create policy "Public profiles are viewable by everyone." on profiles for select using (true);
 create policy "Users can insert their own profile." on profiles for insert with check (auth.uid() = id);
 create policy "Users can update own profile." on profiles for update using (auth.uid() = id);
+create policy "Users can delete own profile." on profiles for delete using (auth.uid() = id);
 
 -- CONTACTS
 create table contacts (
@@ -58,48 +59,17 @@ create policy "Users can update messages involving them (read status/delete)." o
 -- STORAGE (Buckets)
 insert into storage.buckets (id, name, public) values ('chat-media', 'chat-media', true);
 
--- Storage Policies
-create policy "Anyone can upload media" on storage.objects for insert with check ( bucket_id = 'chat-media' );
-create policy "Anyone can view media" on storage.objects for select using ( bucket_id = 'chat-media' );
-
--- FUNCTION: Handle New User (Trigger)
--- Automatically creates a profile entry when a user signs up via Auth
-create or replace function public.handle_new_user() 
+-- TRIGGER: Delete Auth User when Profile is deleted
+-- This ensures that when a user deletes their account from the UI (which deletes the profile),
+-- they are also removed from Supabase Auth so they can't login again.
+create or replace function public.delete_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, user_id, name, avatar)
-  values (new.id, new.email, new.raw_user_meta_data->>'name', new.raw_user_meta_data->>'avatar');
-  return new;
+  delete from auth.users where id = old.id;
+  return old;
 end;
-$$ language plpgsql security definer set search_path = public;
+$$ language plpgsql security definer;
 
-  for each row execute procedure public.handle_new_user();
-
--- BLOCKED USERS
-create table blocked_users (
-  blocker_id uuid references profiles(id) on delete cascade not null,
-  blocked_id uuid references profiles(id) on delete cascade not null,
-  timestamp timestamp with time zone default timezone('utc'::text, now()) not null,
-  primary key (blocker_id, blocked_id)
-);
-
-alter table blocked_users enable row level security;
-create policy "Users can see who they blocked or who blocked them." on blocked_users for select using (auth.uid() = blocker_id or auth.uid() = blocked_id);
-create policy "Users can block others." on blocked_users for insert with check (auth.uid() = blocker_id);
-create policy "Users can unblock others." on blocked_users for delete using (auth.uid() = blocker_id);
-
--- CHAT CLEAR HISTORY
-create table chat_clear_history (
-  user_id uuid references profiles(id) on delete cascade not null,
-  partner_id uuid references profiles(id) on delete cascade not null,
-  cleared_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  primary key (user_id, partner_id)
-);
-
-alter table chat_clear_history enable row level security;
-create policy "Users can manage their own clear history." on chat_clear_history for all using (auth.uid() = user_id);
-
--- ENABLE REALTIME
-alter publication supabase_realtime add table messages;
-alter publication supabase_realtime add table contacts;
-alter publication supabase_realtime add table blocked_users;
+create trigger on_profile_delete
+  after delete on public.profiles
+  for each row execute procedure public.delete_user();
