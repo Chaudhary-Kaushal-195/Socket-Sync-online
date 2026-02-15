@@ -301,7 +301,7 @@ body.menu-active .auth-box {
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: all var(--duration-slow) var(--ease-spring);
+    /* transition removed to prevent conflict with keyframe animations */
     z-index: 10;
     padding-top: 70px;
 }
