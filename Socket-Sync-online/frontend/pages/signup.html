@@ -22,20 +22,20 @@
 
     <!-- Auth Navbar -->
     <nav class="auth-nav">
+        <div class="auth-burger" onclick="toggleAuthMenu()">
+            <i class="fas fa-bars"></i>
+        </div>
         <a href="#" class="auth-nav-logo">
             <img src="../material/images/Socket-Sync-logo.png" alt="Logo">
             Socket-Sync
         </a>
-        <div class="auth-burger" onclick="toggleAuthMenu()">
-            <i class="fas fa-bars"></i>
-        </div>
         <div class="auth-nav-links">
             <a href="#" class="auth-link" onclick="switchView(0); return false;">Home</a>
             <a href="#" class="auth-link" onclick="switchView(1)">About</a>
             <a href="#" class="auth-link" onclick="switchView(2)">Contact Us</a>
             <a href="#" class="auth-link" onclick="switchView(3)">Help/Support</a>
-            <a href="/login" class="auth-btn-sm">Login</a>
         </div>
+        <a href="/login" class="auth-btn-sm">Login</a>
     </nav>
 
     <!-- Home View -->

@@ -650,13 +650,40 @@ body.light-mode .github-btn i {
     z-index: 2020;
 }
 
+/* Desktop Adjustments for new structure */
+@media (min-width: 769px) {
+    .auth-nav-links {
+        margin-left: auto;
+        /* Push links and button to the right */
+        margin-right: 20px;
+    }
+}
+
 @media (max-width: 768px) {
     .auth-nav {
         padding: 0 20px;
+        justify-content: space-between;
+        position: relative;
+        /* For absolute centering of logo */
     }
 
     .auth-burger {
         display: block;
+        order: 1;
+    }
+
+    .auth-nav-logo {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        order: 2;
+        width: auto;
+    }
+
+    .auth-btn-sm {
+        order: 3;
+        padding: 8px 16px;
+        font-size: 0.85rem;
     }
 
     .auth-nav-links {

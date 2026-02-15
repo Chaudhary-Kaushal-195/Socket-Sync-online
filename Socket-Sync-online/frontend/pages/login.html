@@ -20,20 +20,20 @@
 
     <!-- Auth Navbar -->
     <nav class="auth-nav">
+        <div class="auth-burger" onclick="toggleAuthMenu()">
+            <i class="fas fa-bars"></i>
+        </div>
         <a href="#" class="auth-nav-logo">
             <img src="../material/images/Socket-Sync-logo.png" alt="Logo">
             Socket-Sync
         </a>
-        <div class="auth-burger" onclick="toggleAuthMenu()">
-            <i class="fas fa-bars"></i>
-        </div>
         <div class="auth-nav-links">
             <a href="#" class="auth-link" onclick="switchView(0); return false;">Home</a>
             <a href="#" class="auth-link" onclick="switchView(1)">About</a>
             <a href="#" class="auth-link" onclick="switchView(2)">Contact Us</a>
             <a href="#" class="auth-link" onclick="switchView(3)">Help/Support</a>
-            <a href="/signup" class="auth-btn-sm">Sign Up</a>
         </div>
+        <a href="/signup" class="auth-btn-sm">Sign Up</a>
     </nav>
 
     <div id="view-home" class="carousel-view view-center">
