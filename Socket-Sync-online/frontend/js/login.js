@@ -152,48 +152,58 @@ async function onScanSuccess(decodedText, decodedResult) {
                 // We rely on chat.js/auth guard to fetch profile details on redirect.
                 window.location.href = "/chat";
 
-                // ================= REMOTE LOGIN LOGIC (RECEIVER) =================
-                // The user scans THIS screen with their phone to log in here.
+            } catch (e) {
+                console.error("Session Import Error", e);
+                alert("Login via QR failed: " + e.message);
+            }
+        }
+    } catch (e) {
+        console.error("Scanner Error", e);
+    }
+}
 
-                let remoteLoginSubscription = null;
+// ================= REMOTE LOGIN LOGIC (RECEIVER) =================
+// The user scans THIS screen with their phone to log in here.
 
-                function generateUUID() { // Simple UUID v4
-                    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-                        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                        return v.toString(16);
-                    });
-                }
+let remoteLoginSubscription = null;
 
-                function initRemoteLogin() {
-                    const qrContainer = document.getElementById("remote-login-qr");
-                    if (!qrContainer) return;
+function generateUUID() { // Simple UUID v4
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
 
-                    // 1. Create unique Request ID for this specific browser session
-                    const requestId = generateUUID();
-                    console.log("Initializing Remote Login. Request ID:", requestId);
+function initRemoteLogin() {
+    const qrContainer = document.getElementById("remote-login-qr");
+    if (!qrContainer) return;
 
-                    // 2. Generate QR Code
-                    // Payload: { type: 'remote_login', id: requestId }
-                    const payload = JSON.stringify({ type: 'remote_login', id: requestId });
-                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(payload)}&bgcolor=ffffff&color=000000&margin=2`;
+    // 1. Create unique Request ID for this specific browser session
+    const requestId = generateUUID();
+    console.log("Initializing Remote Login. Request ID:", requestId);
 
-                    qrContainer.innerHTML = `<img src="${qrUrl}" alt="Scan to Login" style="width: 220px; height: 220px; border-radius: 4px;">`;
+    // 2. Generate QR Code
+    // Payload: { type: 'remote_login', id: requestId }
+    const payload = JSON.stringify({ type: 'remote_login', id: requestId });
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(payload)}&bgcolor=ffffff&color=000000&margin=2`;
 
-                    // 3. Subscribe to Supabase Broadcast Channel
-                    if (remoteLoginSubscription) {
-                        supabase.removeChannel(remoteLoginSubscription);
-                    }
+    qrContainer.innerHTML = `<img src="${qrUrl}" alt="Scan to Login" style="width: 220px; height: 220px; border-radius: 4px;">`;
 
-                    const channelName = `login-sync:${requestId}`;
-                    const channel = supabase.channel(channelName);
+    // 3. Subscribe to Supabase Broadcast Channel
+    if (remoteLoginSubscription) {
+        supabase.removeChannel(remoteLoginSubscription);
+    }
 
-                    channel
-                        .on('broadcast', { event: 'remote_login_approval' }, async (event) => {
-                            console.log("Remote Login APPROVED by device!", event);
+    const channelName = `login-sync:${requestId}`;
+    const channel = supabase.channel(channelName);
 
-                            if (event.payload && event.payload.session) {
-                                // Visual Success
-                                qrContainer.innerHTML = `
+    channel
+        .on('broadcast', { event: 'remote_login_approval' }, async (event) => {
+            console.log("Remote Login APPROVED by device!", event);
+
+            if (event.payload && event.payload.session) {
+                // Visual Success
+                qrContainer.innerHTML = `
                     <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:220px;">
                         <i class="fas fa-check-circle" style="color:#28a745; font-size:4rem; margin-bottom:15px;"></i>
                         <h4 style="color:var(--text-primary); margin:0;">Success!</h4>
@@ -201,212 +211,204 @@ async function onScanSuccess(decodedText, decodedResult) {
                     </div>
                 `;
 
-                                // Set the session
-                                const { access_token, refresh_token } = event.payload.session;
+                // Set the session
+                const { access_token, refresh_token } = event.payload.session;
 
-                                try {
-                                    const { error } = await supabase.auth.setSession({
-                                        access_token,
-                                        refresh_token
-                                    });
+                try {
+                    const { error } = await supabase.auth.setSession({
+                        access_token,
+                        refresh_token
+                    });
 
-                                    if (!error) {
-                                        setTimeout(() => { window.location.href = "/chat"; }, 800);
-                                    } else {
-                                        console.error("Session Set Error", error);
-                                        alert("Login Failed: Token error.");
-                                        initRemoteLogin();
-                                    }
-                                } catch (e) {
-                                    console.error("Auth Error", e);
-                                }
-                            }
-                        })
-                        .subscribe();
-
-                    remoteLoginSubscription = channel;
+                    if (!error) {
+                        setTimeout(() => { window.location.href = "/chat"; }, 800);
+                    } else {
+                        console.error("Session Set Error", error);
+                        alert("Login Failed: Token error.");
+                        initRemoteLogin();
+                    }
+                } catch (e) {
+                    console.error("Auth Error", e);
                 }
+            }
+        })
+        .subscribe();
 
-                // Init on Load
-                document.addEventListener("DOMContentLoaded", () => {
-                    initRemoteLogin();
-                    setInterval(initRemoteLogin, 180000);
-                });
-
-                // Remove old scanner functions
-                window.startQrScanner = function () { console.warn("Legacy scanner removed."); };
-                window.handleQrFileUpload = function () { console.warn("Legacy scanner removed."); };
-
-
-
-                // Standard Login
-                document.addEventListener('DOMContentLoaded', () => {
-                    const loginForm = document.getElementById('loginForm');
-                    const uidInput = document.getElementById('uid');
-                    const pwdInput = document.getElementById('pwd');
-
-                    // Real-time validation
-                    if (uidInput) {
-                        uidInput.addEventListener('blur', () => {
-                            showFieldError(uidInput, validateUserId(uidInput.value));
-                        });
-                        uidInput.addEventListener('input', () => {
-                            if (uidInput.classList.contains('is-invalid')) {
-                                showFieldError(uidInput, validateUserId(uidInput.value));
-                            }
-                        });
-                    }
-
-                    if (pwdInput) {
-                        pwdInput.addEventListener('blur', () => {
-                            showFieldError(pwdInput, validatePassword(pwdInput.value));
-                        });
-                        pwdInput.addEventListener('input', () => {
-                            if (pwdInput.classList.contains('is-invalid')) {
-                                showFieldError(pwdInput, validatePassword(pwdInput.value));
-                            }
-                        });
-                    }
-
-                    if (loginForm) {
-                        loginForm.addEventListener('submit', async (e) => {
-                            e.preventDefault();
-                            const email = document.getElementById('uid').value;
-                            const pwd = document.getElementById('pwd').value;
-
-                            // Validate fields
-                            const userIdErrors = validateUserId(email);
-                            const passwordErrors = validatePassword(pwd);
-
-                            const userIdValid = showFieldError(uidInput, userIdErrors);
-                            const passwordValid = showFieldError(pwdInput, passwordErrors);
-
-                            if (!userIdValid || !passwordValid) {
-                                return;
-                            }
-
-                            try {
-                                // Supabase Login
-                                if (!window.supabase) {
-                                    alert("System Error: Supabase client not initialized. Please refresh.");
-                                    return;
-                                }
-
-                                const { data, error } = await window.supabase.auth.signInWithPassword({
-                                    email: email,
-                                    password: pwd
-                                });
-
-                                if (error) {
-                                    alert("Login failed: " + error.message);
-                                } else {
-                                    // Fetch Profile details to store in currentUser
-                                    const { data: profile, error: profileError } = await supabase
-                                        .from('profiles')
-                                        .select('*')
-                                        .eq('id', data.session.user.id)
-                                        .single();
-
-                                    if (profileError) {
-                                        console.error("Profile fetch error", profileError);
-                                        // Fallback using auth metadata if profile fails
-                                        const userMeta = data.session.user.user_metadata;
-                                        const currentUser = {
-                                            user_id: data.session.user.id, // UUID
-                                            email: data.session.user.email,
-                                            name: userMeta.name || email.split('@')[0],
-                                            avatar: userMeta.avatar || "https://ui-avatars.com/api/?name=User"
-                                        };
-                                        localStorage.setItem("currentUser", JSON.stringify(currentUser));
-                                    } else {
-                                        // Use profile data
-                                        const currentUser = {
-                                            user_id: profile.id, // UUID
-                                            email: profile.user_id, // stored email in profiles
-                                            name: profile.name,
-                                            avatar: profile.avatar
-                                        };
-                                        localStorage.setItem("currentUser", JSON.stringify(currentUser));
-                                    }
-
-                                    // Update Login Streak
-                                    try {
-                                        const now = new Date();
-                                        const lastLogin = profile.last_login ? new Date(profile.last_login) : null;
-                                        let streak = profile.login_streak || 0;
-
-                                        if (lastLogin) {
-                                            const diff = now - lastLogin;
-                                            const oneDay = 24 * 60 * 60 * 1000;
-                                            if (diff > oneDay && diff < (oneDay * 2)) {
-                                                streak++;
-                                            } else if (diff > (oneDay * 2)) {
-                                                streak = 1;
-                                            }
-                                        } else {
-                                            streak = 1;
-                                        }
-
-                                        await supabase
-                                            .from('profiles')
-                                            .update({
-                                                last_login: now.toISOString(),
-                                                login_streak: streak
-                                            })
-                                            .eq('id', profile.id);
-
-                                    } catch (e) {
-                                        console.error("Streak access/update failed", e);
-                                    }
-
-                                    window.location.href = "/chat";
-                                }
-                            } catch (err) {
-                                alert("Login critical error: " + err.message);
-                                console.error(err);
-                            }
-                        });
-                    }
-                });
-
-                // ================= SOCIAL LOGIN =================
-                // ================= SOCIAL LOGIN =================
-                // import { auth, googleProvider, githubProvider, signInWithPopup } from './firebase-config.js';
-
-                window.loginWithGoogle = async function () {
-                    try {
-                        const { data, error } = await window.supabase.auth.signInWithOAuth({
-                            provider: 'google',
-                            options: {
-                                redirectTo: window.location.origin + '/chat'
-                            }
-                        });
-                        if (error) throw error;
-                    } catch (e) {
-                        console.error("Google Login Error", e);
-                        alert("Google Login Error: " + e.message);
-                    }
-                }
-
-                window.loginWithGithub = async function () {
-                    try {
-                        const { data, error } = await window.supabase.auth.signInWithOAuth({
-                            provider: 'github',
-                            options: {
-                                redirectTo: window.location.origin + '/chat'
-                            }
-                        });
-                        if (error) throw error;
-                    } catch (e) {
-                        console.error("GitHub Login Error", e);
-                        alert("GitHub Login Error: " + e.message);
-                    }
-                }
-
-/*
-async function handleSocialLogin(firebaseUser) {
-    // Legacy Firebase Code Removed
+    remoteLoginSubscription = channel;
 }
-*/
 
-// Make globally available for HTML onclick
+// Init on Load
+document.addEventListener("DOMContentLoaded", () => {
+    initRemoteLogin();
+    setInterval(initRemoteLogin, 180000);
+});
+
+// Remove old scanner functions
+window.startQrScanner = function () { console.warn("Legacy scanner removed."); };
+window.handleQrFileUpload = function () { console.warn("Legacy scanner removed."); };
+
+
+
+// Standard Login
+document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById('loginForm');
+    const uidInput = document.getElementById('uid');
+    const pwdInput = document.getElementById('pwd');
+
+    // Real-time validation
+    if (uidInput) {
+        uidInput.addEventListener('blur', () => {
+            showFieldError(uidInput, validateUserId(uidInput.value));
+        });
+        uidInput.addEventListener('input', () => {
+            if (uidInput.classList.contains('is-invalid')) {
+                showFieldError(uidInput, validateUserId(uidInput.value));
+            }
+        });
+    }
+
+    if (pwdInput) {
+        pwdInput.addEventListener('blur', () => {
+            showFieldError(pwdInput, validatePassword(pwdInput.value));
+        });
+        pwdInput.addEventListener('input', () => {
+            if (pwdInput.classList.contains('is-invalid')) {
+                showFieldError(pwdInput, validatePassword(pwdInput.value));
+            }
+        });
+    }
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('uid').value;
+            const pwd = document.getElementById('pwd').value;
+
+            // Validate fields
+            const userIdErrors = validateUserId(email);
+            const passwordErrors = validatePassword(pwd);
+
+            const userIdValid = showFieldError(uidInput, userIdErrors);
+            const passwordValid = showFieldError(pwdInput, passwordErrors);
+
+            if (!userIdValid || !passwordValid) {
+                return;
+            }
+
+            try {
+                // Supabase Login
+                if (!window.supabase) {
+                    alert("System Error: Supabase client not initialized. Please refresh.");
+                    return;
+                }
+
+                const { data, error } = await window.supabase.auth.signInWithPassword({
+                    email: email,
+                    password: pwd
+                });
+
+                if (error) {
+                    alert("Login failed: " + error.message);
+                } else {
+                    // Fetch Profile details to store in currentUser
+                    const { data: profile, error: profileError } = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', data.session.user.id)
+                        .single();
+
+                    if (profileError) {
+                        console.error("Profile fetch error", profileError);
+                        // Fallback using auth metadata if profile fails
+                        const userMeta = data.session.user.user_metadata;
+                        const currentUser = {
+                            user_id: data.session.user.id, // UUID
+                            email: data.session.user.email,
+                            name: userMeta.name || email.split('@')[0],
+                            avatar: userMeta.avatar || "https://ui-avatars.com/api/?name=User"
+                        };
+                        localStorage.setItem("currentUser", JSON.stringify(currentUser));
+                    } else {
+                        // Use profile data
+                        const currentUser = {
+                            user_id: profile.id, // UUID
+                            email: profile.user_id, // stored email in profiles
+                            name: profile.name,
+                            avatar: profile.avatar
+                        };
+                        localStorage.setItem("currentUser", JSON.stringify(currentUser));
+                    }
+
+                    // Update Login Streak
+                    try {
+                        const now = new Date();
+                        const lastLogin = profile.last_login ? new Date(profile.last_login) : null;
+                        let streak = profile.login_streak || 0;
+
+                        if (lastLogin) {
+                            const diff = now - lastLogin;
+                            const oneDay = 24 * 60 * 60 * 1000;
+                            if (diff > oneDay && diff < (oneDay * 2)) {
+                                streak++;
+                            } else if (diff > (oneDay * 2)) {
+                                streak = 1;
+                            }
+                        } else {
+                            streak = 1;
+                        }
+
+                        await supabase
+                            .from('profiles')
+                            .update({
+                                last_login: now.toISOString(),
+                                login_streak: streak
+                            })
+                            .eq('id', profile.id);
+
+                    } catch (e) {
+                        console.error("Streak access/update failed", e);
+                    }
+
+                    window.location.href = "/chat";
+                }
+            } catch (err) {
+                alert("Login critical error: " + err.message);
+                console.error(err);
+            }
+        });
+    }
+});
+
+// ================= SOCIAL LOGIN =================
+// ================= SOCIAL LOGIN =================
+// import { auth, googleProvider, githubProvider, signInWithPopup } from './firebase-config.js';
+
+window.loginWithGoogle = async function () {
+    try {
+        const { data, error } = await window.supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: window.location.origin + '/chat'
+            }
+        });
+        if (error) throw error;
+    } catch (e) {
+        console.error("Google Login Error", e);
+        alert("Google Login Error: " + e.message);
+    }
+}
+
+window.loginWithGithub = async function () {
+    try {
+        const { data, error } = await window.supabase.auth.signInWithOAuth({
+            provider: 'github',
+            options: {
+                redirectTo: window.location.origin + '/chat'
+            }
+        });
+        if (error) throw error;
+    } catch (e) {
+        console.error("GitHub Login Error", e);
+        alert("GitHub Login Error: " + e.message);
+    }
+}
