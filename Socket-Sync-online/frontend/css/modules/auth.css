@@ -476,7 +476,8 @@ body.menu-active .auth-box {
         gap: 15px;
     }
 
-    .auth-box {
+    .auth-box,
+    .info-modal-content {
         margin: 0 16px;
         padding: 32px 24px;
         border-radius: 24px !important;
@@ -806,8 +807,9 @@ body.light-mode .github-btn i {
         z-index: 2015;
     }
 
-    /* Ensure auth-box doesn't touch edges */
-    .auth-box {
+    /* Ensure auth-box and info modals don't touch edges */
+    .auth-box,
+    .info-modal-content {
         margin: 0 auto;
         width: 90%;
     }
