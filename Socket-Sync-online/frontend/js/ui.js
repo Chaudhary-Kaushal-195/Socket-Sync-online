@@ -68,6 +68,53 @@ function updateRightSidebarInfo() {
     }
 }
 
+// ================= QR TOGGLE =================
+async function toggleQrType() {
+    const img = document.getElementById("myQrCode");
+    const btn = document.getElementById("qrToggleBtn");
+    const title = document.getElementById("qrTitle");
+    const desc = document.getElementById("qrDesc");
+
+    if (!window.showingLoginQr) {
+        // Switch to Login QR
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) {
+            showAlert("Session not found", "danger");
+            return;
+        }
+
+        // We include both tokens. Warning: This creates a dense QR code.
+        const qrPayload = {
+            type: 'session',
+            rt: data.session.refresh_token,
+            at: data.session.access_token
+        };
+        const qrData = JSON.stringify(qrPayload);
+        // Increase size for dense data
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrData)}`;
+        img.src = qrUrl;
+
+        btn.innerText = "Show Profile QR";
+        if (title) title.innerText = "Login QR (Secure)";
+        if (desc) desc.innerText = "Scan to login instantly";
+        window.showingLoginQr = true;
+    } else {
+        // Switch back to Profile QR
+        const qrPayload = {
+            type: 'profile',
+            email: currentUser.email
+        };
+        const qrData = JSON.stringify(qrPayload);
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`;
+        img.src = qrUrl;
+
+        btn.innerText = "Show Login QR (Secure)";
+        if (title) title.innerText = "Profile QR Code";
+        if (desc) desc.innerText = "Scan to share contact";
+        window.showingLoginQr = false;
+    }
+}
+
 // ================= PROFILE MODAL =================
 async function openProfileModal() {
     const modal = document.getElementById("profileModal");
@@ -84,7 +131,12 @@ async function openProfileModal() {
     // Reset QR State
     window.showingLoginQr = false;
     const qrToggleBtn = document.getElementById("qrToggleBtn");
+    const qrTitle = document.getElementById("qrTitle");
+    const qrDesc = document.getElementById("qrDesc");
+
     if (qrToggleBtn) qrToggleBtn.innerText = "Show Login QR (Secure)";
+    if (qrTitle) qrTitle.innerText = "Profile QR Code";
+    if (qrDesc) qrDesc.innerText = "Scan to share contact";
 
     // Generate QR (Profile Default)
     const qrPayload = {
