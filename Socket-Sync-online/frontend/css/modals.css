@@ -108,6 +108,26 @@
     /* Allow scrolling for long content like profile */
 }
 
+@media (max-width: 768px) {
+    .media-modal {
+        align-items: flex-start;
+        /* Align to top on mobile to avoid cutting off */
+        padding-top: 20px;
+        padding-bottom: 20px;
+        height: 100%;
+        max-height: 100%;
+        border-radius: 0;
+    }
+
+    .profile-dashboard {
+        min-height: auto;
+        /* Allow it to grow */
+        overflow: visible;
+        /* Let content flow */
+        border-radius: 0;
+    }
+}
+
 .media-modal.hidden {
     display: none;
 }
