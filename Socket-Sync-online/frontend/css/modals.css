@@ -132,6 +132,7 @@
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
         z-index: 3000;
+        pointer-events: auto;
     }
 
     /* Explicity target Profile Modal for Block Layout */
@@ -143,11 +144,7 @@
         padding-top: 0;
     }
 
-    /* Disable content animations on mobile to prevent fixed pos breaking */
-    .media-modal * {
-        animation: none !important;
-        transform: none !important;
-    }
+    /* Remove aggressive * selection to prevent breaking child layouts */
 
     .profile-dashboard {
         width: 100%;
@@ -159,17 +156,26 @@
         margin-bottom: 0;
         background: var(--bg-dark);
         position: static;
+        transform: none !important;
+        /* Ensure no layer creation on dashboard */
     }
 
     .media-close {
-        top: 15px;
+        top: max(15px, env(safe-area-inset-top) + 15px);
+        /* Notch safe */
         right: 15px;
         position: fixed;
         z-index: 2147483647 !important;
-        background: rgba(0, 0, 0, 0.5);
-        width: 40px;
-        height: 40px;
+        background: rgba(0, 0, 0, 0.6);
+        width: 44px;
+        /* Larger touch target */
+        height: 44px;
         pointer-events: auto !important;
+        cursor: pointer;
+        display: flex !important;
+        /* Force display */
+        align-items: center;
+        justify-content: center;
     }
 
     /* Ensure images in media modal are sized correctly */
@@ -177,6 +183,7 @@
         max-width: 100%;
         max-height: 80vh;
         object-fit: contain;
+        pointer-events: auto;
     }
 }
 
