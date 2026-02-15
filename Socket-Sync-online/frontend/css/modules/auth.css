@@ -394,7 +394,9 @@ body.menu-active .auth-box {
 .auth-nav-logo:hover {
     /* transform: scale(1.02); */
     /* Removed vibration effect */
-    opacity: 0.9;
+    opacity: 1;
+    text-shadow: 0 0 15px var(--primary-color);
+    /* Subtle glow instead of movement */
 }
 
 .auth-nav-logo img {
