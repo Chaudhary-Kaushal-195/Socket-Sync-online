@@ -6,7 +6,64 @@ const ctxMenu = document.getElementById("ctxMenu");
 let ctxTarget = null;
 
 // Load User
+// Load User
 const storedUser = localStorage.getItem("currentUser");
+
+// ================= AUTH HANDLER (OAuth & Session) =================
+// Listen for Auth Changes (Google/GitHub Redirects)
+supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+        if (!localStorage.getItem("currentUser")) {
+            console.log("OAuth Login Detected. Processing...");
+
+            try {
+                // 1. Fetch Profile
+                let { data: profile, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('user_id', session.user.email)
+                    .single();
+
+                // 2. Auto-Create Profile (First Time Login)
+                if (!profile) {
+                    console.log("Creating new profile for social user...");
+                    const { data: newProfile, error: createError } = await supabase
+                        .from('profiles')
+                        .insert({
+                            user_id: session.user.email,
+                            name: session.user.user_metadata.full_name || session.user.email.split('@')[0],
+                            avatar: session.user.user_metadata.avatar_url || "https://ui-avatars.com/api/?background=random&name=" + session.user.email,
+                            status: "Online",
+                            last_login: new Date().toISOString()
+                        })
+                        .select()
+                        .single();
+
+                    if (createError) throw createError;
+                    profile = newProfile;
+                }
+
+                // 3. Save Session
+                const userObj = {
+                    name: profile.name,
+                    email: profile.user_id,
+                    user_id: profile.id,
+                    avatar: profile.avatar
+                };
+                localStorage.setItem("currentUser", JSON.stringify(userObj));
+
+                // 4. Reload to Start Chat
+                window.location.reload();
+
+            } catch (e) {
+                console.error("OAuth Error:", e);
+                alert("Login Error: " + e.message);
+            }
+        }
+    }
+});
+
+// ================= INITIALIZATION =================
 if (storedUser) {
     window.currentUser = JSON.parse(storedUser);
     currentUser = window.currentUser; // Update local ref if any
@@ -28,7 +85,17 @@ if (storedUser) {
 
     loadUsers();
 } else {
-    window.location.href = "/login";
+    // Only redirect if NOT processing an OAuth callback
+    if (!window.location.hash || !window.location.hash.includes("access_token")) {
+        // Allow a brief moment for session recovery (optional but safer)
+        setTimeout(() => {
+            if (!localStorage.getItem("currentUser")) {
+                window.location.href = "/login";
+            }
+        }, 1000);
+    } else {
+        console.log("Processing Social Login Redirect...");
+    }
 }
 
 // Setup Supabase Realtime
