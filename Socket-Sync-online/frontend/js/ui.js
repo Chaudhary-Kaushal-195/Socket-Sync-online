@@ -332,7 +332,30 @@ async function resetProfilePicture() {
 }
 
 async function confirmDeleteAccount() {
-    alert("Account deletion is not supported in this version. Please contact administrator.");
+    if (!confirm("Are you sure you want to delete your account? This action is IRREVERSIBLE and will delete all your messages and contacts.")) {
+        return;
+    }
+
+    if (!currentUser) return;
+
+    try {
+        // 1. Delete Profile (Cascades to messages, contacts, etc.)
+        const { error } = await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', currentUser.user_id);
+
+        if (error) {
+            console.error("Delete failed:", error);
+            alert("Failed to delete account: " + error.message + "\n\n(Please run the SQL command provided to enable deletion)");
+        } else {
+            alert("Account deleted successfully.");
+            logout(); // Clear local storage and redirect
+        }
+    } catch (e) {
+        console.error("Delete error:", e);
+        alert("An unexpected error occurred during deletion.");
+    }
 }
 
 // ================= GLOBAL EVENT LISTENERS (Modals) =================
