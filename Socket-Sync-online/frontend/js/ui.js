@@ -421,13 +421,33 @@ window.closeLinkDeviceModal = function () {
     }
 }
 
-function startLinkScanner() {
+async function startLinkScanner() {
     if (linkDeviceScanner) return;
 
-    linkDeviceScanner = new Html5QrcodeScanner(
-        "link-scanner-reader", { fps: 10, qrbox: 250 });
+    // Use Headless Scanner for custom UI control
+    linkDeviceScanner = new Html5Qrcode("link-scanner-reader");
 
-    linkDeviceScanner.render(onLinkScanSuccess);
+    try {
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+        // Wait for modal transition
+        setTimeout(async () => {
+            // Environment (Back) Camera
+            await linkDeviceScanner.start(
+                { facingMode: "environment" },
+                config,
+                onLinkScanSuccess
+            );
+        }, 300); // 300ms delay for modal animation
+
+    } catch (err) {
+        console.error("Camera Error", err);
+        document.getElementById("link-scanner-reader").innerHTML =
+            `<p style="color:var(--danger-color); padding:20px; text-align:center;">
+                Camera Error: ${err.message}<br>
+                Please allow camera permissions.
+             </p>`;
+    }
 }
 
 async function onLinkScanSuccess(decodedText) {
@@ -436,35 +456,60 @@ async function onLinkScanSuccess(decodedText) {
         const payload = JSON.parse(decodedText);
         if (payload.type === 'remote_login' && payload.id) {
 
+            // 1. Stop Scanner
             if (linkDeviceScanner) {
-                await linkDeviceScanner.clear();
+                try {
+                    await linkDeviceScanner.stop();
+                    await linkDeviceScanner.clear();
+                } catch (e) { console.warn("Stop error", e); }
                 linkDeviceScanner = null;
             }
+
             document.getElementById("link-scanner-reader").innerHTML =
                 `<div style="text-align:center; padding:20px; color:#28a745;">
                     <i class="fas fa-check-circle" style="font-size:3rem; margin-bottom:10px;"></i>
-                    <h4>Sending Session...</h4>
+                    <h4>Sending Login...</h4>
                  </div>`;
 
+            // 2. Get Session
             const { data } = await supabase.auth.getSession();
             if (!data.session) {
-                alert("Error: Not logged in.");
+                alert("Error: You are not logged in on this device.");
                 return;
             }
 
+            // 3. Connect & Send
+            console.log(`Connecting to channel: login-sync:${payload.id}`);
             const channel = supabase.channel(`login-sync:${payload.id}`);
+
             channel.subscribe(async (status) => {
+                console.log(`Channel Status: ${status}`);
+
                 if (status === 'SUBSCRIBED') {
-                    await channel.send({
-                        type: 'broadcast', event: 'remote_login_approval',
-                        payload: { session: { access_token: data.session.access_token, refresh_token: data.session.refresh_token } }
+                    console.log("Sending remote_login_approval...");
+                    const res = await channel.send({
+                        type: 'broadcast',
+                        event: 'remote_login_approval',
+                        payload: {
+                            session: {
+                                access_token: data.session.access_token,
+                                refresh_token: data.session.refresh_token
+                            }
+                        }
                     });
 
-                    setTimeout(() => {
-                        supabase.removeChannel(channel);
-                        closeLinkDeviceModal();
-                        showAlert("Device Linked Successfully!", "success");
-                    }, 1000);
+                    console.log("Send Result:", res);
+
+                    // 4. Cleanup
+                    if (res === 'ok') {
+                        setTimeout(() => {
+                            supabase.removeChannel(channel);
+                            closeLinkDeviceModal();
+                            showAlert("Device Linked Successfully!", "success");
+                        }, 1000);
+                    } else {
+                        alert("Failed to send login signal. Please try again.");
+                    }
                 }
             });
         }
