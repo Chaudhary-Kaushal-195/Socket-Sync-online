@@ -111,20 +111,31 @@
 @media (max-width: 768px) {
     .media-modal {
         display: block !important;
-        /* Force block to ensure native scrolling */
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        transform: none;
+        transform: none !important;
+        animation: none !important;
         border-radius: 0;
-        overflow-y: auto;
+        overflow-y: scroll;
+        /* Explicit scroll */
         -webkit-overflow-scrolling: touch;
         padding: 0;
         margin: 0;
         background: var(--bg-dark);
+        backdrop-filter: none !important;
+        /* Fix jitter */
+        -webkit-backdrop-filter: none !important;
         z-index: 3000;
+    }
+
+    /* Disable content animations on mobile to prevent fixed pos breaking */
+    .media-modal * {
+        animation: none !important;
+        transform: none !important;
+        /* Prevent new stacking contexts */
     }
 
     .profile-dashboard {
@@ -133,16 +144,30 @@
         height: auto;
         overflow: visible;
         border-radius: 0;
-        padding-bottom: 60px;
-        /* Ensure bottom content is reachable */
+        padding-bottom: 80px;
+        /* More space */
         margin-bottom: 0;
+        background: var(--bg-dark);
+        /* Ensure opaque */
+        position: static;
+        /* Let parent handle flow */
     }
+
+    /* Important: Re-enable transforms for specific children if needed, 
+       but for profile dashboard, we want simplicity */
 
     .media-close {
         top: 15px;
         right: 15px;
         position: fixed;
-        z-index: 10002;
+        z-index: 2147483647 !important;
+        /* Max Z-Index */
+        background: rgba(0, 0, 0, 0.5);
+        /* Clearer background */
+        width: 40px;
+        height: 40px;
+        pointer-events: auto !important;
+        /* Force clickable */
     }
 }
 
