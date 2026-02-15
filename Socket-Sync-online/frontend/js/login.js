@@ -328,11 +328,33 @@ document.addEventListener('DOMContentLoaded', () => {
 // import { auth, googleProvider, githubProvider, signInWithPopup } from './firebase-config.js';
 
 window.loginWithGoogle = async function () {
-    alert("Social login is currently being migrated to Supabase. This feature will be available soon.");
+    try {
+        const { data, error } = await window.supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: window.location.origin + '/chat'
+            }
+        });
+        if (error) throw error;
+    } catch (e) {
+        console.error("Google Login Error", e);
+        alert("Google Login Error: " + e.message);
+    }
 }
 
 window.loginWithGithub = async function () {
-    alert("Social login is currently being migrated to Supabase. This feature will be available soon.");
+    try {
+        const { data, error } = await window.supabase.auth.signInWithOAuth({
+            provider: 'github',
+            options: {
+                redirectTo: window.location.origin + '/chat'
+            }
+        });
+        if (error) throw error;
+    } catch (e) {
+        console.error("GitHub Login Error", e);
+        alert("GitHub Login Error: " + e.message);
+    }
 }
 
 /*
