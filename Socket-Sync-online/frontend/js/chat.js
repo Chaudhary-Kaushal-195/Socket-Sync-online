@@ -33,7 +33,6 @@ supabase.auth.onAuthStateChange(async (event, session) => {
                             user_id: session.user.email,
                             name: session.user.user_metadata.full_name || session.user.email.split('@')[0],
                             avatar: session.user.user_metadata.avatar_url || "https://ui-avatars.com/api/?background=random&name=" + session.user.email,
-                            status: "Online",
                             last_login: new Date().toISOString()
                         })
                         .select()
