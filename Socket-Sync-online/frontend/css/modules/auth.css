@@ -877,3 +877,66 @@ body.light-mode .github-btn i {
         font-size: 1.2rem;
     }
 }
+
+/* ================= REMOTE LOGIN SECTION ================= */
+.remote-login-section {
+    margin-top: 25px;
+    padding-top: 25px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.remote-login-section p {
+    margin-bottom: 20px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+#remote-login-qr {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    padding: 12px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    width: 200px;
+    /* Fixed container width */
+    height: 200px;
+    /* Fixed container height */
+    overflow: hidden;
+    /* Prevent spill */
+    transition: transform 0.3s ease;
+}
+
+#remote-login-qr:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+.qr-code-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+    display: block;
+}
+
+/* Spinner adjustment */
+.spinner-border {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-width: 0.25em;
+}
+
+/* Success State styling override */
+#remote-login-qr.success-state {
+    background: transparent;
+    box-shadow: none;
+    height: auto;
+    width: 100%;
+}

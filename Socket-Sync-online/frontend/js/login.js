@@ -187,7 +187,7 @@ function initRemoteLogin() {
     const payload = JSON.stringify({ type: 'remote_login', id: requestId });
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(payload)}&bgcolor=ffffff&color=000000&margin=2`;
 
-    qrContainer.innerHTML = `<img src="${qrUrl}" alt="Scan to Login" style="width: 220px; height: 220px; border-radius: 4px;">`;
+    qrContainer.innerHTML = `<img src="${qrUrl}" alt="Scan to Login" class="qr-code-img">`;
 
     // 3. Subscribe to Supabase Broadcast Channel
     if (remoteLoginSubscription) {
