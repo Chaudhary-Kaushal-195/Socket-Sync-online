@@ -215,17 +215,62 @@ function initRemoteLogin() {
                 const { access_token, refresh_token } = event.payload.session;
 
                 try {
-                    const { error } = await supabase.auth.setSession({
+                    const { data, error } = await supabase.auth.setSession({
                         access_token,
                         refresh_token
                     });
 
-                    if (!error) {
-                        setTimeout(() => { window.location.href = "/chat"; }, 800);
+                    if (!error && data.session) {
+                        // FETCH PROFILE AND SET LOCALSTORAGE
+                        // This is crucial for chat.js to recognize the user
+                        const user = data.session.user;
+                        console.log("Session set. Fetching profile for:", user.email);
+
+                        let { data: profile, error: profileError } = await supabase
+                            .from('profiles')
+                            .select('*')
+                            .eq('user_id', user.email) // Legacy schema uses email as user_id link?
+                            .single();
+
+                        // Fallback check by ID if email lookup fails or for future proofing
+                        if (!profile) {
+                            const { data: profileById } = await supabase
+                                .from('profiles')
+                                .select('*')
+                                .eq('id', user.id)
+                                .single();
+                            profile = profileById;
+                        }
+
+                        if (profile) {
+                            const currentUser = {
+                                name: profile.name,
+                                email: profile.user_id, // Keeping compatibility with existing schema
+                                user_id: profile.id,
+                                avatar: profile.avatar
+                            };
+                            localStorage.setItem("currentUser", JSON.stringify(currentUser));
+                            console.log("User stored in localStorage:", currentUser);
+                        } else {
+                            console.warn("Profile not found. Creating temporary user obj.");
+                            const currentUser = {
+                                name: user.user_metadata.full_name || user.email.split('@')[0],
+                                email: user.email,
+                                user_id: user.id,
+                                avatar: user.user_metadata.avatar_url || "https://ui-avatars.com/api/?name=User"
+                            };
+                            localStorage.setItem("currentUser", JSON.stringify(currentUser));
+                        }
+
+                        // Redirect
+                        setTimeout(() => {
+                            window.location.href = "/chat";
+                        }, 800);
+
                     } else {
                         console.error("Session Set Error", error);
                         alert("Login Failed: Token error.");
-                        initRemoteLogin();
+                        initRemoteLogin(); // Reset
                     }
                 } catch (e) {
                     console.error("Auth Error", e);
