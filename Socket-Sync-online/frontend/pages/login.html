@@ -146,6 +146,7 @@
         const views = ['view-home', 'modal-about', 'modal-contact', 'modal-help'];
 
         function switchView(targetIndex) {
+            document.body.classList.remove("menu-active"); // Close mobile menu if open
             if (currentIndex === targetIndex) return;
 
             const currentView = document.getElementById(views[currentIndex]);
