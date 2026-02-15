@@ -81,9 +81,16 @@ async function openProfileModal() {
     avatarEl.src = currentUser.avatar;
 
     // Generate QR (Client-side using API)
-    // Data: just the email (user_id) for now
-    const qrData = currentUser.email;
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrData)}`;
+    // Generate QR (Client-side using API)
+    const qrPayload = {
+        type: 'profile',
+        id: currentUser.user_id,
+        name: currentUser.name,
+        email: currentUser.email,
+        avatar: currentUser.avatar
+    };
+    const qrData = JSON.stringify(qrPayload);
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`;
     document.getElementById("myQrCode").src = qrUrl;
 
     // Fetch Stats

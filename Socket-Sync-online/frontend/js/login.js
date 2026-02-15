@@ -121,29 +121,33 @@ async function onScanSuccess(decodedText, decodedResult) {
             html5QrCode.clear();
         }
 
-        const payload = JSON.parse(decodedText);
+        let payload;
+        try {
+            payload = JSON.parse(decodedText);
+        } catch (e) {
+            alert("Invalid QR format. Expected JSON.");
+            window.location.reload();
+            return;
+        }
 
         if (payload.type === "login" && payload.token) {
-            document.getElementById('qr-reader').innerHTML = "Verifying...";
-
-            const r = await fetch(`${API_BASE}/login/qr`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: payload.token })
-            });
-
-            const data = await r.json();
-            if (data.error) {
-                alert("Login Failed: " + data.error);
-                window.location.reload();
-            } else {
-                localStorage.setItem("currentUser", JSON.stringify(data));
-                window.location.href = "/chat";
-            }
+            // Legacy Login Logic - Migration Pending
+            alert("Login via QR is currently disabled during migration.");
+            window.location.reload();
         }
+        else if (payload.type === "profile") {
+            // User scanned a profile QR
+            alert(`Found User: ${payload.name} (${payload.email})\n\nPlease log in to add them to your contacts.`);
+            window.location.reload();
+        }
+        else {
+            alert("Unknown QR Code Type: " + payload.type);
+            window.location.reload();
+        }
+
     } catch (e) {
-        console.error("Invalid QR", e);
-        alert("Invalid QR Code");
+        console.error("Scanner Error", e);
+        alert("Error processing QR code");
         window.location.reload();
     }
 }
