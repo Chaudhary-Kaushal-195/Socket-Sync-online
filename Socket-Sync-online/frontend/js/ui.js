@@ -260,9 +260,40 @@ function downloadQr() {
 }
 
 async function shareQr() {
-    // Similar to download but navigator.share
-    // Skipped for brevity, similar implementation
-    alert("Sharing not fully implemented in client-only mode yet.");
+    const img = document.getElementById("myQrCode");
+    if (!img || !img.src) return;
+
+    try {
+        // Convert to Blob
+        const blob = await fetch(img.src).then(r => r.blob());
+        const file = new File([blob], "contact_qr.png", { type: blob.type });
+
+        // Method 1: Web Share API (Mobile + Supported Desktops)
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                title: 'Socket-Sync Contact',
+                text: 'Scan this QR code to add me on Socket-Sync!',
+                files: [file]
+            });
+        }
+        // Method 2: Copy to Clipboard (Fallback)
+        else {
+            try {
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        [blob.type]: blob
+                    })
+                ]);
+                alert("QR Code copied to clipboard!");
+            } catch (err) {
+                console.warn("Clipboard write failed", err);
+                alert("Sharing not supported on this device. Please use 'Download' instead.");
+            }
+        }
+    } catch (e) {
+        console.error("Share failed", e);
+        alert("Could not share QR code.");
+    }
 }
 
 async function viewStats() {
