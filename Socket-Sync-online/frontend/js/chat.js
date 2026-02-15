@@ -861,6 +861,7 @@ messagesBox.addEventListener('click', (e) => {
 
 // ================= BLOCK & CLEAR ACTIONS =================
 async function loadBlockedUsers() {
+    if (!currentUser) return;
     try {
         const { data, error } = await supabase
             .from('blocked_users')
