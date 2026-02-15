@@ -113,6 +113,48 @@ body.menu-active .auth-box {
     opacity: 0.5;
 }
 
+
+/* ========== INFO MODAL CONTENT (About, Contact, Help) ========== */
+/* Reuse glassmorphism card style */
+.info-modal-content {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    padding: 40px;
+    width: 100%;
+    max-width: 500px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    border: var(--glass-border);
+    color: var(--text-primary);
+    position: relative;
+    z-index: 1;
+    animation: authBoxEnter var(--duration-slower) var(--ease-spring);
+    margin: 0 auto;
+    /* Center it */
+}
+
+/* Gradient border for info modals */
+.info-modal-content::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg,
+            rgba(255, 97, 210, 0.2) 0%,
+            transparent 50%,
+            rgba(0, 217, 255, 0.1) 100%);
+    z-index: -1;
+    opacity: 0.5;
+}
+
+.info-modal-content h2 {
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+    color: var(--primary-color);
+    text-align: center;
+}
+
 .auth-box h3 {
     text-align: center;
     color: var(--text-primary);
