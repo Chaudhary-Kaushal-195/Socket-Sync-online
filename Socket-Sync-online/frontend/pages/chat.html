@@ -112,12 +112,12 @@
 
                 <div class="chat-header hidden" style="margin-top:10px;">
                     <div style="display:flex; align-items:center; gap:10px; flex:1;">
-                        <div class="chat-info" onclick="toggleRightSidebar()"
-                            style="cursor: pointer; display:flex; align-items:center; gap:10px;" tabindex="0"
+                        <div class="chat-info" style="display:flex; align-items:center; gap:10px;" tabindex="0"
                             role="button">
                             <img id="chatAvatar" src=""
-                                style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
-                            <div>
+                                style="width:40px;height:40px;border-radius:50%;object-fit:cover; cursor: pointer;"
+                                onclick="openImageModal(this.src, false); event.stopPropagation();">
+                            <div onclick="toggleRightSidebar()" style="cursor: pointer;">
                                 <h3 id="chatHeaderTitle" style="margin:0; font-size:1rem;"></h3>
                                 <span id="chatStatus" style="font-size:0.8rem; opacity:0.7;"></span>
                             </div>
