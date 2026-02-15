@@ -75,6 +75,8 @@ async function toggleQrType() {
     const title = document.getElementById("qrTitle");
     const desc = document.getElementById("qrDesc");
 
+    console.log("Toggling QR. Current state (LoginQR?):", window.showingLoginQr);
+
     if (!window.showingLoginQr) {
         // Switch to Login QR
         const { data } = await supabase.auth.getSession();
@@ -83,34 +85,46 @@ async function toggleQrType() {
             return;
         }
 
-        // We include both tokens. Warning: This creates a dense QR code.
+        console.log("Generating SESSION QR...");
+
         const qrPayload = {
             type: 'session',
             rt: data.session.refresh_token,
             at: data.session.access_token
         };
         const qrData = JSON.stringify(qrPayload);
-        // Increase size for dense data
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrData)}`;
+        // Add timestamp to prevent caching
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrData)}&time=${Date.now()}`;
+
         img.src = qrUrl;
 
         btn.innerText = "Show Profile QR";
-        if (title) title.innerText = "Login QR (Secure)";
+        if (title) title.innerText = "Login QR (Secure - DO NOT SHARE)";
         if (desc) desc.innerText = "Scan to login instantly";
+
+        // Visual feedback
+        img.style.border = "2px solid #ff4444";
+
         window.showingLoginQr = true;
     } else {
         // Switch back to Profile QR
+        console.log("Generating PROFILE QR...");
+
         const qrPayload = {
             type: 'profile',
             email: currentUser.email
         };
         const qrData = JSON.stringify(qrPayload);
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`;
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}&time=${Date.now()}`;
+
         img.src = qrUrl;
 
         btn.innerText = "Show Login QR (Secure)";
         if (title) title.innerText = "Profile QR Code";
         if (desc) desc.innerText = "Scan to share contact";
+
+        img.style.border = "none";
+
         window.showingLoginQr = false;
     }
 }
