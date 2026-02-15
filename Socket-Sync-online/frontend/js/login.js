@@ -155,43 +155,85 @@ async function onScanSuccess(decodedText, decodedResult) {
             } catch (e) {
                 console.error("Session Import Error", e);
                 alert("Login via QR failed: " + e.message);
-                window.location.reload();
             }
         }
         else if (payload.type === "profile") {
             // User scanned a profile QR
             const uidInput = document.getElementById("uid");
             if (uidInput) {
-                // We are on the login page
                 uidInput.value = payload.email || "";
 
                 // Focus password field
                 const pwdInput = document.getElementById("pwd");
                 if (pwdInput) pwdInput.focus();
 
-                // Hide scanner logic/UI if strictly needed, but reload might be cleaner to stop scanner? 
-                // Actually, stopping scanner manually is better UX than reload for autofill.
+                // Stop scanner
+                if (window.html5QrcodeScanner) {
+                    window.html5QrcodeScanner.clear().catch(e => console.warn(e));
+                }
                 document.getElementById('qr-reader').style.display = "none";
 
-                // Optional: Trigger input event for any validation listeners
+                // Trigger validation
                 uidInput.dispatchEvent(new Event('input'));
-            } else {
-                // We are likely inside the app (e.g. Add Contact modal)
-                alert(`Found User: ${payload.email}\n\nPlease log in to add them to your contacts.`);
-                window.location.reload();
+                alert(`QR Recognized! Email autofilled: ${payload.email}`);
             }
         }
         else {
             alert("Unknown QR Code Type: " + payload.type);
-            window.location.reload();
         }
 
     } catch (e) {
         console.error("Scanner Error", e);
-        alert("Error processing QR code");
-        window.location.reload();
+        // Fallback for plain email
+        if (decodedText && decodedText.includes("@")) {
+            const uidInput = document.getElementById("uid");
+            if (uidInput) {
+                uidInput.value = decodedText;
+                if (window.html5QrcodeScanner) window.html5QrcodeScanner.clear().catch(e => { });
+                document.getElementById('qr-reader').style.display = "none";
+                alert("Scanned text detected as email. Autofilled!");
+            }
+        } else {
+            alert("Error processing QR code. Please scan a valid code.");
+        }
     }
 }
+
+// Global Success Handler for Re-use
+window.onQrScanSuccess = onScanSuccess;
+
+window.startQrScanner = function () {
+    const readerDiv = document.getElementById('qr-reader');
+    readerDiv.style.display = "block";
+
+    if (window.html5QrcodeScanner) {
+        // Already running
+        return;
+    }
+
+    window.html5QrcodeScanner = new Html5QrcodeScanner(
+        "qr-reader", { fps: 10, qrbox: 250 });
+
+    window.html5QrcodeScanner.render(onScanSuccess);
+};
+
+// Handle File Upload for QR
+window.handleQrFileUpload = async function (input) {
+    if (input.files.length === 0) return;
+    const file = input.files[0];
+
+    // Use Headless Scanner
+    const html5QrCode = new Html5Qrcode("qr-reader");
+
+    try {
+        const decodedText = await html5QrCode.scanFile(file, true);
+        onScanSuccess(decodedText, null);
+    } catch (err) {
+        console.error("File Scan Error", err);
+        alert("Could not scan QR from this image. Please ensure the QR code is clear.");
+    }
+    input.value = '';
+};
 
 // Standard Login
 document.addEventListener('DOMContentLoaded', () => {
