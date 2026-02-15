@@ -11,26 +11,38 @@ const storedUser = localStorage.getItem("currentUser");
 
 // ================= AUTH HANDLER (OAuth & Session) =================
 // Listen for Auth Changes (Google/GitHub Redirects)
+// Listen for Auth Changes (Google/GitHub Redirects)
 supabase.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session) {
         if (!localStorage.getItem("currentUser")) {
             console.log("OAuth Login Detected. Processing...");
 
             try {
-                // 1. Fetch Profile
+                // 1. Try Fetch Profile by ID (UUID) - Most reliable
                 let { data: profile, error } = await supabase
                     .from('profiles')
                     .select('*')
-                    .eq('user_id', session.user.email)
+                    .eq('id', session.user.id)
                     .single();
 
-                // 2. Auto-Create Profile (First Time Login)
+                // 2. Fallback: Fetch by Email (Legacy schema support)
+                if (!profile) {
+                    const { data: profileByEmail } = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('user_id', session.user.email)
+                        .single();
+                    profile = profileByEmail;
+                }
+
+                // 3. Auto-Create Profile if still missing
                 if (!profile) {
                     console.log("Creating new profile for social user...");
                     const { data: newProfile, error: createError } = await supabase
                         .from('profiles')
                         .insert({
-                            user_id: session.user.email,
+                            id: session.user.id, // Explicitly set UUID
+                            user_id: session.user.email, // Legacy email field
                             name: session.user.user_metadata.full_name || session.user.email.split('@')[0],
                             avatar: session.user.user_metadata.avatar_url || "https://ui-avatars.com/api/?background=random&name=" + session.user.email,
                             last_login: new Date().toISOString()
@@ -38,25 +50,43 @@ supabase.auth.onAuthStateChange(async (event, session) => {
                         .select()
                         .single();
 
-                    if (createError) throw createError;
-                    profile = newProfile;
+                    if (createError) {
+                        // Handle race condition: Profile might have been created by trigger
+                        if (createError.code === '23505') { // Unique violation
+                            const { data: existingProfile } = await supabase
+                                .from('profiles')
+                                .select('*')
+                                .eq('id', session.user.id)
+                                .single();
+                            profile = existingProfile;
+                        } else {
+                            throw createError;
+                        }
+                    } else {
+                        profile = newProfile;
+                    }
                 }
 
-                // 3. Save Session
-                const userObj = {
-                    name: profile.name,
-                    email: profile.user_id,
-                    user_id: profile.id,
-                    avatar: profile.avatar
-                };
-                localStorage.setItem("currentUser", JSON.stringify(userObj));
+                // 4. Save Session if we have a valid profile
+                if (profile) {
+                    const userObj = {
+                        name: profile.name,
+                        email: profile.user_id, // Keeping legacy structure
+                        user_id: profile.id,    // UUID
+                        avatar: profile.avatar
+                    };
+                    localStorage.setItem("currentUser", JSON.stringify(userObj));
 
-                // 4. Reload to Start Chat
-                window.location.reload();
+                    // Reload to Start Chat
+                    window.location.reload();
+                } else {
+                    throw new Error("Failed to load or create user profile.");
+                }
 
             } catch (e) {
                 console.error("OAuth Error:", e);
-                alert("Login Error: " + e.message);
+                // Don't alert immediately, user might just be loading
+                if (e.message.includes("Failed to load")) alert("Login Error: " + e.message);
             }
         }
     }
