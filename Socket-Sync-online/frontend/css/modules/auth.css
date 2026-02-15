@@ -940,3 +940,74 @@ body.light-mode .github-btn i {
     height: auto;
     width: 100%;
 }
+
+/* ================= SOCKET-SYNC NEW 2-COL LAYOUT ================= */
+
+/* Expand the box only for LG screens */
+@media (min-width: 769px) {
+    .auth-box {
+        max-width: 800px;
+        /* Double width */
+        padding: 40px;
+    }
+
+    .auth-row {
+        display: flex;
+        align-items: flex-start;
+        /* Top align usually looks better */
+        justify-content: space-between;
+        gap: 30px;
+    }
+
+    .auth-col-left,
+    .auth-col-right {
+        flex: 1;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    /* Vertical Divider */
+    .auth-divider-vert {
+        width: 1px;
+        background: rgba(255, 255, 255, 0.15);
+        align-self: stretch;
+        margin: 0 10px;
+    }
+
+    /* Reset top margin/border for remote section in side-by-side */
+    .remote-login-section {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
+    }
+}
+
+/* Mobile Fallback */
+@media (max-width: 768px) {
+    .auth-box {
+        max-width: 400px;
+    }
+
+    .auth-row {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .auth-divider-vert {
+        display: none;
+        /* Or make it horizontal */
+        height: 1px;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        margin: 15px 0;
+    }
+
+    .remote-login-section {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+}
