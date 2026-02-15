@@ -397,3 +397,78 @@ function scrollToBottom() {
         messagesBox.scrollTop = messagesBox.scrollHeight;
     }
 }
+// ================= LINK DEVICE (SENDER) LOGIC =================
+let linkDeviceScanner = null;
+
+window.linkNewDevice = function () {
+    const modal = document.getElementById("linkDeviceModal");
+    if (modal) {
+        modal.classList.remove("hidden");
+        modal.style.display = "flex"; // Force flex
+        startLinkScanner();
+    }
+}
+
+window.closeLinkDeviceModal = function () {
+    const modal = document.getElementById("linkDeviceModal");
+    if (modal) {
+        modal.classList.add("hidden");
+        modal.style.display = "none";
+    }
+    if (linkDeviceScanner) {
+        linkDeviceScanner.clear().catch(e => { });
+        linkDeviceScanner = null;
+    }
+}
+
+function startLinkScanner() {
+    if (linkDeviceScanner) return;
+
+    linkDeviceScanner = new Html5QrcodeScanner(
+        "link-scanner-reader", { fps: 10, qrbox: 250 });
+
+    linkDeviceScanner.render(onLinkScanSuccess);
+}
+
+async function onLinkScanSuccess(decodedText) {
+    console.log("Link Scan Result:", decodedText);
+    try {
+        const payload = JSON.parse(decodedText);
+        if (payload.type === 'remote_login' && payload.id) {
+
+            if (linkDeviceScanner) {
+                await linkDeviceScanner.clear();
+                linkDeviceScanner = null;
+            }
+            document.getElementById("link-scanner-reader").innerHTML =
+                `<div style="text-align:center; padding:20px; color:#28a745;">
+                    <i class="fas fa-check-circle" style="font-size:3rem; margin-bottom:10px;"></i>
+                    <h4>Sending Session...</h4>
+                 </div>`;
+
+            const { data } = await supabase.auth.getSession();
+            if (!data.session) {
+                alert("Error: Not logged in.");
+                return;
+            }
+
+            const channel = supabase.channel(`login-sync:${payload.id}`);
+            channel.subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    await channel.send({
+                        type: 'broadcast', event: 'remote_login_approval',
+                        payload: { session: { access_token: data.session.access_token, refresh_token: data.session.refresh_token } }
+                    });
+
+                    setTimeout(() => {
+                        supabase.removeChannel(channel);
+                        closeLinkDeviceModal();
+                        showAlert("Device Linked Successfully!", "success");
+                    }, 1000);
+                }
+            });
+        }
+    } catch (e) {
+        console.warn("Scan Error", e);
+    }
+}
