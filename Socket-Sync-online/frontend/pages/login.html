@@ -69,23 +69,26 @@
                 </button>
             </div>
 
-            <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-                <button onclick="startQrScanner()" class="btn btn-outline-light"
-                    style="background: transparent; border: 1px solid var(--primary-color); width: 100%;">
-                    <i class="fas fa-qrcode"></i> Scan QR to Login
-                </button>
-            </div>
+            <!-- Remote Login (WhatsApp Style) -->
+            <div class="remote-login-section"
+                style="margin-top: 20px; text-align: center; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                <p style="margin-bottom: 15px; color: var(--text-secondary); font-size: 0.9rem;">
+                    To use Socket-Sync on your computer:<br>
+                    1. Open Socket-Sync on your phone<br>
+                    2. Go to <strong>Settings > Link Device</strong><br>
+                    3. Point your phone to this screen
+                </p>
 
-            <div style="margin-top: 10px;">
-                <input type="file" id="qr-input-file" accept="image/*" style="display: none;"
-                    onchange="handleQrFileUpload(this)">
-                <button onclick="document.getElementById('qr-input-file').click()" class="btn btn-outline-secondary"
-                    style="background: transparent; border: 1px solid var(--text-secondary); width: 100%; color: var(--text-secondary);">
-                    <i class="fas fa-file-image"></i> Upload QR Image
-                </button>
-            </div>
+                <div id="remote-login-qr"
+                    style="display: inline-block; padding: 10px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    <div class="spinner-border text-primary" role="status"
+                        style="width: 3rem; height: 3rem; margin: 20px;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
 
-            <div id="qr-reader" style="width: 100%; margin-top: 10px; display:none;"></div>
+                <div id="remote-req-id" style="display:none;"></div>
+            </div>
         </div>
     </div>
 
