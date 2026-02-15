@@ -26,6 +26,9 @@
             <img src="../material/images/Socket-Sync-logo.png" alt="Logo">
             Socket-Sync
         </a>
+        <div class="auth-burger" onclick="toggleAuthMenu()">
+            <i class="fas fa-bars"></i>
+        </div>
         <div class="auth-nav-links">
             <a href="#" class="auth-link" onclick="switchView(0); return false;">Home</a>
             <a href="#" class="auth-link" onclick="switchView(1)">About</a>
@@ -178,6 +181,10 @@
             });
 
             currentIndex = targetIndex;
+        }
+
+        function toggleAuthMenu() {
+            document.body.classList.toggle("menu-active");
         }
     </script>
 
