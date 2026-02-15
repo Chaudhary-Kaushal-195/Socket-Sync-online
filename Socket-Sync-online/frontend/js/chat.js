@@ -176,7 +176,8 @@ setupSupabaseRealtime();
 loadBlockedUsers();
 
 function logout() {
-    supabase.auth.signOut().then(() => {
+    // scope: 'local' prevents logging out other devices when logging out here
+    supabase.auth.signOut({ scope: 'local' }).then(() => {
         localStorage.removeItem("currentUser");
         window.location.href = "/login";
     });
