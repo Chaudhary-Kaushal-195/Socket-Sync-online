@@ -229,6 +229,24 @@
     opacity: 0.8;
 }
 
+/* Mobile: Fix time alignment and spacing */
+@media (max-width: 768px) {
+    .msg.deleted {
+        padding-right: 10px;
+    }
+
+    .msg.deleted .msg-content::after {
+        content: none;
+    }
+
+    .msg.deleted .msg-time {
+        float: right;
+        margin-left: 6px;
+        position: static;
+        /* Reset positioning if needed */
+    }
+}
+
 
 
 /* ========== MEDIA MESSAGES ========== */
