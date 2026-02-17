@@ -416,8 +416,8 @@ body.light-mode .msg-tick i {
 }
 
 body.light-mode .msg-tick i.read {
-    color: #ff3b30;
-    /* Red for Light Mode */
+    color: #00ffff;
+    /* Bright Cyan for Light Mode */
 }
 
 /* ========== UNREAD BADGE ========== */
