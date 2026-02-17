@@ -228,18 +228,18 @@
 .msg.deleted {
     /* Standard message padding, only italic */
     font-style: italic;
+    opacity: 0.8;
 }
 
+/* Ensure content and time behave exactly like standard text messages */
 .msg.deleted .msg-content {
     display: inline;
 }
 
-
-
-/* Restore spacer for proper time alignment (inherits from .msg:not(.has-media)) */
+/* Spacer for time alignment (same as standard) */
 .msg.deleted .msg-content::after {
-    /* We allow the standard spacer to apply */
     content: '\00a0\00a0\00a0\00a0\00a0\00a0\00a0\00a0\00a0';
+    display: inline;
 }
 
 .msg.deleted .msg-time {
