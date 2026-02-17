@@ -236,8 +236,8 @@
         flex-direction: column;
         align-items: flex-start;
         gap: 0;
-        padding-right: 10px;
-        /* Tight padding */
+        padding-right: 14px;
+        /* Balanced padding */
     }
 
     .msg.deleted .msg-content {
