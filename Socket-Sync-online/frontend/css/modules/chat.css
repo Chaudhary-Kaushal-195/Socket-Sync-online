@@ -229,32 +229,33 @@
     opacity: 0.8;
 }
 
-/* Mobile: Fix time alignment and spacing using Flexbox */
+/* Mobile: Fix time alignment and spacing using Flex Column */
 @media (max-width: 768px) {
     .msg.deleted {
         display: flex;
-        flex-wrap: wrap;
-        align-items: baseline;
-        gap: 6px;
-        padding-right: 12px;
-        /* Balanced padding */
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0;
+        padding-right: 10px;
+        /* Tight padding */
     }
 
     .msg.deleted .msg-content {
         display: block;
-        /* Allow text to take width */
+        padding-right: 0;
     }
 
     .msg.deleted .msg-content::after {
         content: none;
-        /* No spacer needed for flex */
     }
 
     .msg.deleted .msg-time {
         float: none;
         display: block;
-        margin-left: auto;
+        align-self: flex-end;
         /* Push to right */
+        margin-left: 0;
+        margin-top: 2px;
         font-size: 0.65rem;
     }
 }
