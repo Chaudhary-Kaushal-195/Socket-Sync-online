@@ -115,9 +115,7 @@ function showMsg(msg) {
 
         if (isRevoked) {
             // Revoked Message Style
-            contentHtml += `<div class="msg-content">
-                This message was deleted
-            </div>`;
+            contentHtml += `<div class="msg-content">This message was deleted</div>`;
         }
         else {
             if (msg.file_url) {

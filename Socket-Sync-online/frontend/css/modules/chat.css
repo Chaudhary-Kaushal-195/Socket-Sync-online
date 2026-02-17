@@ -227,31 +227,6 @@
 .msg.deleted {
     font-style: italic;
     opacity: 0.8;
-    color: rgba(255, 255, 255, 0.7);
-    display: inline-block;
-    /* Ensure it shrinks to fit */
-    padding-right: 12px;
-}
-
-/* Force standard text behavior but don't force inline if it causes width issues */
-.msg.deleted .msg-content {
-    display: inline;
-}
-
-/* Standard spacer for time alignment */
-.msg.deleted .msg-content::after {
-    content: '\00a0\00a0\00a0\00a0\00a0\00a0\00a0\00a0';
-    display: inline;
-}
-
-.msg.deleted .msg-time {
-    float: none;
-    display: inline-block;
-    vertical-align: bottom;
-    margin-top: 0;
-    margin-left: 0;
-    opacity: 0.7;
-    font-size: 0.65rem;
 }
 
 
