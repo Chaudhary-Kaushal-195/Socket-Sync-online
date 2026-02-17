@@ -621,3 +621,29 @@
 .hidden {
     display: none !important;
 }
+
+/* ========== CANCEL BUTTON (High Contrast) ========== */
+.btn-cancel {
+    background: transparent;
+    border: 1px solid white;
+    color: white;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+}
+
+.btn-cancel:hover {
+    background: white;
+    color: black;
+}
+
+/* Light Mode Override */
+body.light-mode .btn-cancel {
+    border-color: black;
+    color: black;
+}
+
+body.light-mode .btn-cancel:hover {
+    background: black;
+    color: white;
+}
