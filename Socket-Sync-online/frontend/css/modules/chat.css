@@ -392,7 +392,8 @@
 }
 
 .msg-tick i.read {
-    color: #4facfe;
+    color: #0055ff;
+    /* Dark Blue for Dark Mode */
     animation: tickRead var(--duration-normal) var(--ease-spring);
 }
 
@@ -415,7 +416,8 @@ body.light-mode .msg-tick i {
 }
 
 body.light-mode .msg-tick i.read {
-    color: #3b82f6;
+    color: #ff3b30;
+    /* Red for Light Mode */
 }
 
 /* ========== UNREAD BADGE ========== */
