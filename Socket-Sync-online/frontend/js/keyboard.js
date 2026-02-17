@@ -328,7 +328,7 @@ function handleMessageSelection(direction) {
     if (allMsgs.length === 0) return;
 
     // Get IDs from dataset
-    const msgIds = allMsgs.map(el => parseInt(el.dataset.id));
+    const msgIds = allMsgs.map(el => el.dataset.id);
 
     // CHECK FOR MANUAL SELECTION SYNC
     if (typeof selectedMessages !== 'undefined' && selectedMessages.size === 1) {
