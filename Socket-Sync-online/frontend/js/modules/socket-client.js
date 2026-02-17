@@ -2,6 +2,7 @@
 // ================= SUPABASE REALTIME CLIENT =================
 
 let realtimeChannel = null;
+let typingChannel = null; // Separate channel for ephemeral typing events
 
 function setupSupabaseRealtime() {
     if (!currentUser) return;
@@ -82,6 +83,68 @@ function setupSupabaseRealtime() {
                 markAllDelivered();
             }
         });
+
+    // ================= TYPING INDICATOR CHANNEL =================
+    // Use a separate channel or the same one? Ideally separate 'room:typing' or similar.
+    // Broadcast messages are ephemeral.
+    typingChannel = window.supabase.channel('room:typing');
+
+    typingChannel
+        .on('broadcast', { event: 'typing' }, (payload) => {
+            // payload: { user: userId, typing: boolean, chat: chatId }
+            handleTypingEvent(payload.payload);
+        })
+        .subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+                // console.log("Typing channel subscribed");
+            }
+        });
+}
+
+function sendTypingEvent(isTyping, chatId) {
+    if (!typingChannel || !currentUser) return;
+
+    typingChannel.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: {
+            user: currentUser.user_id,
+            typing: isTyping,
+            chat: chatId
+        }
+    });
+}
+
+function handleTypingEvent({ user, typing, chat }) {
+    // 1. Check if the typing event is relevant to me
+    // It is relevant if:
+    // a) The user "user" is the one I am currently chatting with (currentChat === user)
+    // b) OR, maybe I am in a group (not impl yet)
+
+    // Ignore my own typing (shouldn't happen via broadcast usually but good safety)
+    if (user === currentUser.user_id) return;
+
+    if (currentChat === user) {
+        // Update UI
+        const indicator = document.getElementById("typingIndicator");
+        const nameSpan = document.getElementById("typingUserName");
+
+        if (typing) {
+            // Show
+            if (indicator) {
+                indicator.classList.remove("hidden");
+                // Try to find name in cache or DOM
+                if (nameSpan) {
+                    // Get name from chat header or list
+                    const headerName = document.getElementById("chatUserName");
+                    nameSpan.innerText = headerName ? headerName.innerText : "User";
+                }
+            }
+        } else {
+            // Hide
+            if (indicator) indicator.classList.add("hidden");
+        }
+    }
 }
 
 function updateAllUserStatuses() {
@@ -366,3 +429,4 @@ function playNotificationSound() {
 // Export for chat.js
 window.setupSupabaseRealtime = setupSupabaseRealtime;
 window.markAllDelivered = markAllDelivered;
+window.sendTypingEvent = sendTypingEvent;
