@@ -6,9 +6,6 @@ const ctxMenu = document.getElementById("ctxMenu");
 let ctxTarget = null;
 
 // Load User
-// Load User
-// Load User
-// Load User
 const storedUser = localStorage.getItem("currentUser");
 // currentUser is global from globals.js
 if (storedUser) {
@@ -37,15 +34,9 @@ if (storedUser) {
                 });
 
                 if (result.error) {
-                    console.error("Failed to recover profile:", result.error);
                     // If we can't recover, we should probably logout to force clean state
-                    if (result.error.code !== '23505') { // Ignore unique conflict (good race condition)
-                        console.error("Critical Profile Error. Logging out.");
-                        // localStorage.removeItem("currentUser");
-                        // window.location.href = "/login";
-                    }
                 } else {
-                    console.log("Profile recovered successfully.");
+                    // Profile recovered successfully
                 }
             }
         } catch (err) {
@@ -56,86 +47,86 @@ if (storedUser) {
 
 // ================= AUTH HANDLER (OAuth & Session) =================
 // Listen for Auth Changes (Google/GitHub Redirects)
-// Listen for Auth Changes (Google/GitHub Redirects)
 supabase.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session) {
         if (!localStorage.getItem("currentUser")) {
-            console.log("OAuth Login Detected. Processing...");
+            if (!localStorage.getItem("currentUser")) {
 
-            try {
-                // 1. Try Fetch Profile by ID (UUID) - Most reliable
-                let { data: profile, error } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', session.user.id)
-                    .single();
-
-                // 2. Fallback: Fetch by Email (Legacy schema support)
-                if (!profile) {
-                    const { data: profileByEmail } = await supabase
+                try {
+                    // 1. Try Fetch Profile by ID (UUID) - Most reliable
+                    let { data: profile, error } = await supabase
                         .from('profiles')
                         .select('*')
-                        .eq('user_id', session.user.email)
-                        .single();
-                    profile = profileByEmail;
-                }
-
-                // 3. Auto-Create Profile if still missing
-                if (!profile) {
-                    console.log("Creating new profile for social user...");
-                    const { data: newProfile, error: createError } = await supabase
-                        .from('profiles')
-                        .insert({
-                            id: session.user.id, // Explicitly set UUID
-                            user_id: session.user.email, // Legacy email field
-                            name: session.user.user_metadata.full_name || session.user.email.split('@')[0],
-                            avatar: session.user.user_metadata.avatar_url || "https://ui-avatars.com/api/?background=random&name=" + session.user.email,
-                            last_login: new Date().toISOString()
-                        })
-                        .select()
+                        .eq('id', session.user.id)
                         .single();
 
-                    if (createError) {
-                        // Handle race condition: Profile might have been created by trigger
-                        if (createError.code === '23505') { // Unique violation
-                            const { data: existingProfile } = await supabase
+                    // 2. Fallback: Fetch by Email (Legacy schema support)
+                    if (!profile) {
+                        const { data: profileByEmail } = await supabase
+                            .from('profiles')
+                            .select('*')
+                            .eq('user_id', session.user.email)
+                            .single();
+                        profile = profileByEmail;
+                    }
+
+                    // 3. Auto-Create Profile if still missing
+                    if (!profile) {
+                        // 3. Auto-Create Profile if still missing
+                        if (!profile) {
+                            const { data: newProfile, error: createError } = await supabase
                                 .from('profiles')
-                                .select('*')
-                                .eq('id', session.user.id)
+                                .insert({
+                                    id: session.user.id, // Explicitly set UUID
+                                    user_id: session.user.email, // Legacy email field
+                                    name: session.user.user_metadata.full_name || session.user.email.split('@')[0],
+                                    avatar: session.user.user_metadata.avatar_url || "https://ui-avatars.com/api/?background=random&name=" + session.user.email,
+                                    last_login: new Date().toISOString()
+                                })
+                                .select()
                                 .single();
-                            profile = existingProfile;
-                        } else {
-                            throw createError;
+
+                            if (createError) {
+                                // Handle race condition: Profile might have been created by trigger
+                                if (createError.code === '23505') { // Unique violation
+                                    const { data: existingProfile } = await supabase
+                                        .from('profiles')
+                                        .select('*')
+                                        .eq('id', session.user.id)
+                                        .single();
+                                    profile = existingProfile;
+                                } else {
+                                    throw createError;
+                                }
+                            } else {
+                                profile = newProfile;
+                            }
                         }
-                    } else {
-                        profile = newProfile;
+
+                        // 4. Save Session if we have a valid profile
+                        if (profile) {
+                            const userObj = {
+                                name: profile.name,
+                                email: profile.user_id, // Keeping legacy structure
+                                user_id: profile.id,    // UUID
+                                avatar: profile.avatar
+                            };
+                            localStorage.setItem("currentUser", JSON.stringify(userObj));
+
+                            // Reload to Start Chat
+                            window.location.reload();
+                        } else {
+                            throw new Error("Failed to load or create user profile.");
+                        }
+
+                    } catch (e) {
+                        console.error("OAuth Error:", e);
+                        // Don't alert immediately, user might just be loading
+                        if (e.message.includes("Failed to load")) alert("Login Error: " + e.message);
                     }
                 }
-
-                // 4. Save Session if we have a valid profile
-                if (profile) {
-                    const userObj = {
-                        name: profile.name,
-                        email: profile.user_id, // Keeping legacy structure
-                        user_id: profile.id,    // UUID
-                        avatar: profile.avatar
-                    };
-                    localStorage.setItem("currentUser", JSON.stringify(userObj));
-
-                    // Reload to Start Chat
-                    window.location.reload();
-                } else {
-                    throw new Error("Failed to load or create user profile.");
-                }
-
-            } catch (e) {
-                console.error("OAuth Error:", e);
-                // Don't alert immediately, user might just be loading
-                if (e.message.includes("Failed to load")) alert("Login Error: " + e.message);
-            }
-        }
     }
-});
+        });
 
 // ================= INITIALIZATION =================
 if (storedUser) {
@@ -146,7 +137,8 @@ if (storedUser) {
 
     const meMobileEl = document.getElementById("me-mobile");
     if (meMobileEl) meMobileEl.innerHTML = `Welcome back, <span class="mobile-username">${window.currentUser.name}</span>`;
-    // socket.emit("join") REMOVED
+    const meMobileEl = document.getElementById("me-mobile");
+    if (meMobileEl) meMobileEl.innerHTML = `Welcome back, <span class="mobile-username">${window.currentUser.name}</span>`;
 
     // Load Theme
     const savedTheme = localStorage.getItem("theme");
