@@ -304,13 +304,13 @@ if (suFile) {
             const fileExt = file.name.split('.').pop();
             const fileName = `avatars/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-            const { data, error } = await supabase.storage
+            const { data, error } = await window.supabase.storage
                 .from('chat-media')
                 .upload(fileName, file);
 
             if (error) throw error;
 
-            const { data: { publicUrl } } = supabase.storage
+            const { data: { publicUrl } } = window.supabase.storage
                 .from('chat-media')
                 .getPublicUrl(fileName);
 
@@ -364,7 +364,7 @@ async function signup() {
     // We will revisit Avatar Upload replacement next. For now, use UI Avatar if custom not set properly.
 
     try {
-        const { data, error } = await supabase.auth.signUp({
+        const { data, error } = await window.supabase.auth.signUp({
             email: suid.value,
             password: spwd.value,
             options: {

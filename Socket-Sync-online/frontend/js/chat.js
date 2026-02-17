@@ -25,7 +25,7 @@ if (storedUser) {
             if (error || !data) {
                 console.warn("Profile missing in DB (Zombie Session). Recreating...");
                 // Re-creating profile based on local data
-                const result = await supabase.from('profiles').insert({
+                const result = await window.supabase.from('profiles').insert({
                     id: currentUser.user_id,
                     user_id: currentUser.email,
                     name: currentUser.name,
@@ -46,87 +46,87 @@ if (storedUser) {
 }
 
 // ================= AUTH HANDLER (OAuth & Session) =================
+
 // Listen for Auth Changes (Google/GitHub Redirects)
-supabase.auth.onAuthStateChange(async (event, session) => {
+window.supabase.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session) {
         if (!localStorage.getItem("currentUser")) {
-            if (!localStorage.getItem("currentUser")) {
+            try {
+                // 1. Fetch Profile
+                let profile = null;
+                const { data, error } = await window.supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
 
-                try {
-                    // 1. Try Fetch Profile by ID (UUID) - Most reliable
-                    let { data: profile, error } = await supabase
+                if (data) profile = data;
+
+                // 2. Fallback: Fetch by Email (Legacy schema support)
+                if (!profile) {
+                    const { data: profileByEmail } = await window.supabase
                         .from('profiles')
                         .select('*')
-                        .eq('id', session.user.id)
+                        .eq('user_id', session.user.email)
+                        .single();
+                    profile = profileByEmail;
+                }
+
+                // 3. Auto-Create Profile if still missing
+                if (!profile) {
+                    const { data: newProfile, error: createError } = await window.supabase
+                        .from('profiles')
+                        .insert({
+                            id: session.user.id, // Explicitly set UUID
+                            user_id: session.user.email, // Legacy email field
+                            name: session.user.user_metadata.full_name || session.user.email.split('@')[0],
+                            avatar: session.user.user_metadata.avatar_url || "https://ui-avatars.com/api/?background=random&name=" + session.user.email,
+                            last_login: new Date().toISOString()
+                        })
+                        .select()
                         .single();
 
-                    // 2. Fallback: Fetch by Email (Legacy schema support)
-                    if (!profile) {
-                        const { data: profileByEmail } = await supabase
-                            .from('profiles')
-                            .select('*')
-                            .eq('user_id', session.user.email)
-                            .single();
-                        profile = profileByEmail;
-                    }
-
-                    // 3. Auto-Create Profile if still missing
-                    if (!profile) {
-                        // 3. Auto-Create Profile if still missing
-                        if (!profile) {
-                            const { data: newProfile, error: createError } = await supabase
+                    if (createError) {
+                        // Handle race condition: Profile might have been created by trigger
+                        if (createError.code === '23505') { // Unique violation
+                            const { data: existingProfile } = await window.supabase
                                 .from('profiles')
-                                .insert({
-                                    id: session.user.id, // Explicitly set UUID
-                                    user_id: session.user.email, // Legacy email field
-                                    name: session.user.user_metadata.full_name || session.user.email.split('@')[0],
-                                    avatar: session.user.user_metadata.avatar_url || "https://ui-avatars.com/api/?background=random&name=" + session.user.email,
-                                    last_login: new Date().toISOString()
-                                })
-                                .select()
+                                .select('*')
+                                .eq('id', session.user.id)
                                 .single();
-
-                            if (createError) {
-                                // Handle race condition: Profile might have been created by trigger
-                                if (createError.code === '23505') { // Unique violation
-                                    const { data: existingProfile } = await supabase
-                                        .from('profiles')
-                                        .select('*')
-                                        .eq('id', session.user.id)
-                                        .single();
-                                    profile = existingProfile;
-                                } else {
-                                    throw createError;
-                                }
-                            } else {
-                                profile = newProfile;
-                            }
-                        }
-
-                        // 4. Save Session if we have a valid profile
-                        if (profile) {
-                            const userObj = {
-                                name: profile.name,
-                                email: profile.user_id, // Keeping legacy structure
-                                user_id: profile.id,    // UUID
-                                avatar: profile.avatar
-                            };
-                            localStorage.setItem("currentUser", JSON.stringify(userObj));
-
-                            // Reload to Start Chat
-                            window.location.reload();
+                            profile = existingProfile;
                         } else {
-                            throw new Error("Failed to load or create user profile.");
+                            throw createError;
                         }
-
-                    } catch (e) {
-                        console.error("OAuth Error:", e);
-                        // Don't alert immediately, user might just be loading
-                        if (e.message.includes("Failed to load")) alert("Login Error: " + e.message);
+                    } else {
+                        profile = newProfile;
                     }
                 }
+
+                // 4. Save Session if we have a valid profile
+                if (profile) {
+                    const userObj = {
+                        name: profile.name,
+                        email: profile.user_id, // Keeping legacy structure
+                        user_id: profile.id,    // UUID
+                        avatar: profile.avatar
+                    };
+                    localStorage.setItem("currentUser", JSON.stringify(userObj));
+
+                    // Reload to Start Chat
+                    window.location.reload();
+                } else {
+                    throw new Error("Failed to load or create user profile.");
+                }
+
+            } catch (e) {
+                console.error("OAuth Error:", e);
+                // Don't alert immediately, user might just be loading
+                if (e.message.includes("Failed to load")) alert("Login Error: " + e.message);
+            }
+        }
     }
-        });
+});
 
 // ================= INITIALIZATION =================
 if (storedUser) {
@@ -135,8 +135,6 @@ if (storedUser) {
     const meEl = document.getElementById("me");
     if (meEl) meEl.innerText = window.currentUser.name;
 
-    const meMobileEl = document.getElementById("me-mobile");
-    if (meMobileEl) meMobileEl.innerHTML = `Welcome back, <span class="mobile-username">${window.currentUser.name}</span>`;
     const meMobileEl = document.getElementById("me-mobile");
     if (meMobileEl) meMobileEl.innerHTML = `Welcome back, <span class="mobile-username">${window.currentUser.name}</span>`;
 
@@ -170,7 +168,7 @@ loadBlockedUsers();
 
 function logout() {
     // scope: 'local' prevents logging out other devices when logging out here
-    supabase.auth.signOut({ scope: 'local' }).then(() => {
+    window.supabase.auth.signOut({ scope: 'local' }).then(() => {
         localStorage.removeItem("currentUser");
         window.location.href = "/login";
     });
@@ -208,7 +206,7 @@ async function addContact() {
         const contactUUID = profiles.id;
 
         // 2. Insert into Contacts
-        const { error: insertError } = await supabase
+        const { error: insertError } = await window.supabase
             .from('contacts')
             .insert({
                 user_id: currentUser.user_id,
@@ -231,7 +229,7 @@ async function addContact() {
 // ================= LOAD USERS =================
 async function loadUsers() {
     try {
-        const { data: contacts, error } = await supabase
+        const { data: contacts, error } = await window.supabase
             .from('contacts')
             .select(`
                 contact_id,
@@ -271,6 +269,7 @@ async function loadUsers() {
 
     } catch (e) {
         console.error("Failed to load users", e);
+        alert("Error loading contacts: " + (e.message || JSON.stringify(e)));
     }
 }
 
@@ -305,7 +304,7 @@ function openChat(userId, name, avatar) {
     loadMessages(userId);
 
     // Mark as Read
-    supabase.from('messages')
+    window.supabase.from('messages')
         .update({ status: 'read' })
         .eq('sender', userId)
         .eq('receiver', currentUser.user_id)
@@ -393,7 +392,7 @@ async function send() {
 
     // 3. Send to Supabase
     try {
-        const { error } = await supabase
+        const { error } = await window.supabase
             .from('messages')
             .insert({
                 sender: currentUser.user_id,
@@ -443,7 +442,7 @@ async function sendVoiceMessage(file) {
         scrollToBottom();
 
         // DB Insert
-        const { error } = await supabase.from('messages').insert({
+        const { error } = await window.supabase.from('messages').insert({
             sender: currentUser.user_id,
             receiver: currentChat,
             file_url: uploaded.file_url,
@@ -558,7 +557,7 @@ async function confirmDelete(type) {
         };
 
         try {
-            const { error } = await supabase
+            const { error } = await window.supabase
                 .from('messages')
                 .update(updates)
                 .in('id', idsToDelete)
@@ -586,13 +585,13 @@ async function confirmDelete(type) {
 
         try {
             // 1. messages where I am sender
-            await supabase.from('messages')
+            await window.supabase.from('messages')
                 .update({ deleted_by_sender: true })
                 .in('id', idsToDelete)
                 .eq('sender', currentUser.user_id);
 
             // 2. messages where I am receiver
-            await supabase.from('messages')
+            await window.supabase.from('messages')
                 .update({ deleted_by_receiver: true })
                 .in('id', idsToDelete)
                 .eq('receiver', currentUser.user_id);
@@ -660,7 +659,7 @@ function showForwardModal() {
     modal.classList.remove("hidden");
 
     // Fetch contacts from Supabase
-    supabase.from('contacts')
+    window.supabase.from('contacts')
         .select('contact_id, profiles:contact_id(name, avatar, user_id)')
         .eq('user_id', currentUser.user_id)
         .then(({ data, error }) => {
@@ -694,7 +693,7 @@ async function confirmForward(userId, name) {
 
     if (confirm(`Forward message to ${name}?`)) {
         // Insert new message
-        const { error } = await supabase.from('messages').insert({
+        const { error } = await window.supabase.from('messages').insert({
             sender: currentUser.user_id,
             receiver: userId,
             message: ctxTarget.text || null,
@@ -730,7 +729,7 @@ async function bulkForwardExecute(userId, name) {
         });
 
         if (inserts.length > 0) {
-            const { error } = await supabase.from('messages').insert(inserts);
+            const { error } = await window.supabase.from('messages').insert(inserts);
             if (!error) {
                 closeForwardModal();
                 toggleSelectionMode();
@@ -855,7 +854,7 @@ messagesBox.addEventListener('click', (e) => {
 async function loadBlockedUsers() {
     if (!currentUser) return;
     try {
-        const { data, error } = await supabase
+        const { data, error } = await window.supabase
             .from('blocked_users')
             .select('blocked_id')
             .eq('blocker_id', currentUser.user_id);
@@ -882,13 +881,13 @@ async function blockUser() {
 
         if (data) {
             // Unblock
-            await supabase.from('blocked_users').delete().eq('blocker_id', currentUser.user_id).eq('blocked_id', currentChat);
+            await window.supabase.from('blocked_users').delete().eq('blocker_id', currentUser.user_id).eq('blocked_id', currentChat);
             blockedUsers.delete(currentChat);
             showAlert("User unblocked", "success");
             document.getElementById("blockBtn").innerHTML = '<i class="fas fa-ban"></i> Block User';
         } else {
             // Block
-            await supabase.from('blocked_users').insert({
+            await window.supabase.from('blocked_users').insert({
                 blocker_id: currentUser.user_id,
                 blocked_id: currentChat
             });
@@ -906,7 +905,7 @@ async function blockUser() {
 async function checkBlockStatus() {
     if (!currentChat) return;
     try {
-        const { data } = await supabase
+        const { data } = await window.supabase
             .from('blocked_users')
             .select('*')
             .eq('blocker_id', currentUser.user_id)
@@ -930,7 +929,7 @@ async function clearChat() {
 
     try {
         // Upsert logic for chat_clear_history
-        const { error } = await supabase
+        const { error } = await window.supabase
             .from('chat_clear_history')
             .upsert({
                 user_id: currentUser.user_id,

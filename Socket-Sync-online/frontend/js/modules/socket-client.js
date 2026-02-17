@@ -24,7 +24,9 @@ function setupSupabaseRealtime() {
     // For this implementation, we'll implement client-side filtering for simplicity, 
     // assuming the volume isn't massive yet.
 
-    realtimeChannel = supabase
+    // assuming the volume isn't massive yet.
+
+    realtimeChannel = window.supabase
         .channel('public:messages')
         .on(
             'postgres_changes',
@@ -329,14 +331,14 @@ function handleMessageUpdate(msg) {
 
 function markAsRead(msgId) {
     if (!currentUser) return;
-    supabase.from('messages').update({ status: 'read' }).eq('id', msgId).then(res => {
+    window.supabase.from('messages').update({ status: 'read' }).eq('id', msgId).then(res => {
         // console.log("Marked as read", res);
     });
 }
 
 function markAsDelivered(msgId) {
     if (!currentUser) return;
-    supabase.from('messages')
+    window.supabase.from('messages')
         .update({ status: 'delivered' })
         .eq('id', msgId)
         .eq('status', 'sent')
@@ -348,7 +350,7 @@ function markAsDelivered(msgId) {
 function markAllDelivered() {
     if (!currentUser) return;
     console.log("Marking all pending messages as delivered...");
-    supabase.from('messages')
+    window.supabase.from('messages')
         .update({ status: 'delivered' })
         .eq('receiver', currentUser.user_id)
         .eq('status', 'sent')

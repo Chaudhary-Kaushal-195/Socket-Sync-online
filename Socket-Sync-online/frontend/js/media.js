@@ -50,7 +50,7 @@ async function uploadFile(file) {
     const fileName = `${currentUser.user_id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
     const filePath = fileName;
 
-    const { data, error } = await supabase.storage
+    const { data, error } = await window.supabase.storage
         .from('chat-media')
         .upload(filePath, file);
 
@@ -59,7 +59,7 @@ async function uploadFile(file) {
         throw new Error("Upload failed: " + error.message);
     }
 
-    const { data: { publicUrl } } = supabase.storage
+    const { data: { publicUrl } } = window.supabase.storage
         .from('chat-media')
         .getPublicUrl(filePath);
 
@@ -275,7 +275,7 @@ async function loadChatMedia() {
     if (!currentChat) return;
 
     try {
-        const { data, error } = await supabase
+        const { data, error } = await window.supabase
             .from('messages')
             .select('file_url, file_type, timestamp')
             .or(`and(sender.eq.${currentUser.user_id},receiver.eq.${currentChat}),and(sender.eq.${currentChat},receiver.eq.${currentUser.user_id})`)

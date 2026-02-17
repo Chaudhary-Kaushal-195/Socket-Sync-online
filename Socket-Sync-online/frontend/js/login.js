@@ -191,11 +191,11 @@ function initRemoteLogin() {
 
     // 3. Subscribe to Supabase Broadcast Channel
     if (remoteLoginSubscription) {
-        supabase.removeChannel(remoteLoginSubscription);
+        window.supabase.removeChannel(remoteLoginSubscription);
     }
 
     const channelName = `login-sync:${requestId}`;
-    const channel = supabase.channel(channelName);
+    const channel = window.supabase.channel(channelName);
 
     channel
         .on('broadcast', { event: 'remote_login_approval' }, async (event) => {
@@ -215,7 +215,7 @@ function initRemoteLogin() {
                 const { access_token, refresh_token } = event.payload.session;
 
                 try {
-                    const { data, error } = await supabase.auth.setSession({
+                    const { data, error } = await window.supabase.auth.setSession({
                         access_token,
                         refresh_token
                     });
@@ -226,7 +226,7 @@ function initRemoteLogin() {
                         const user = data.session.user;
                         console.log("Session set. Fetching profile for:", user.email);
 
-                        let { data: profile, error: profileError } = await supabase
+                        let { data: profile, error: profileError } = await window.supabase
                             .from('profiles')
                             .select('*')
                             .eq('user_id', user.email) // Legacy schema uses email as user_id link?
@@ -234,7 +234,7 @@ function initRemoteLogin() {
 
                         // Fallback check by ID if email lookup fails or for future proofing
                         if (!profile) {
-                            const { data: profileById } = await supabase
+                            const { data: profileById } = await window.supabase
                                 .from('profiles')
                                 .select('*')
                                 .eq('id', user.id)
@@ -356,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert("Login failed: " + error.message);
                 } else {
                     // Fetch Profile details to store in currentUser
-                    const { data: profile, error: profileError } = await supabase
+                    const { data: profile, error: profileError } = await window.supabase
                         .from('profiles')
                         .select('*')
                         .eq('id', data.session.user.id)
@@ -374,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             last_login: new Date().toISOString()
                         };
 
-                        const { error: createError } = await supabase
+                        const { error: createError } = await window.supabase
                             .from('profiles')
                             .insert(newProfile);
 
@@ -426,7 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             streak = 1;
                         }
 
-                        await supabase
+                        await window.supabase
                             .from('profiles')
                             .update({
                                 last_login: now.toISOString(),
@@ -448,7 +448,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// ================= SOCIAL LOGIN =================
 // ================= SOCIAL LOGIN =================
 // import { auth, googleProvider, githubProvider, signInWithPopup } from './firebase-config.js';
 

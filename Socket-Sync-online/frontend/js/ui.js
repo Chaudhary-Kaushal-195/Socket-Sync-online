@@ -79,7 +79,7 @@ async function toggleQrType() {
 
     if (!window.showingLoginQr) {
         // Switch to Login QR
-        const { data } = await supabase.auth.getSession();
+        const { data } = await window.supabase.auth.getSession();
         if (!data.session) {
             showAlert("Session not found", "danger");
             return;
@@ -197,7 +197,7 @@ async function openProfileModal() {
 
     try {
         // 1. Get Profile (streak, joined)
-        const { data: profile } = await supabase
+        const { data: profile } = await window.supabase
             .from('profiles')
             .select('login_streak, created_at')
             .eq('id', currentUser.user_id)
@@ -209,7 +209,7 @@ async function openProfileModal() {
         }
 
         // 2. Get Contacts Count
-        const { count } = await supabase
+        const { count } = await window.supabase
             .from('contacts')
             .select('id', { count: 'exact', head: true })
             .eq('user_id', currentUser.user_id);
@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (uploaded.success) {
                         // Update Profile
-                        const { error } = await supabase
+                        const { error } = await window.supabase
                             .from('profiles')
                             .update({ avatar: uploaded.file_url })
                             .eq('id', currentUser.user_id);
@@ -339,7 +339,7 @@ async function resetProfilePicture() {
     if (!confirm("Reset to default avatar?")) return;
     const defaultUrl = "https://ui-avatars.com/api/?name=" + encodeURIComponent(currentUser.name);
 
-    const { error } = await supabase
+    const { error } = await window.supabase
         .from('profiles')
         .update({ avatar: defaultUrl })
         .eq('id', currentUser.user_id);
@@ -363,7 +363,7 @@ async function confirmDeleteAccount() {
 
     try {
         // 1. Delete Profile (Cascades to messages, contacts, etc.)
-        const { error } = await supabase
+        const { error } = await window.supabase
             .from('profiles')
             .delete()
             .eq('id', currentUser.user_id);
@@ -526,7 +526,7 @@ async function onLinkScanSuccess(decodedText) {
                  </div>`;
 
             // 2. Get Session
-            const { data } = await supabase.auth.getSession();
+            const { data } = await window.supabase.auth.getSession();
             if (!data.session) {
                 alert("Error: You are not logged in on this device.");
                 return;
@@ -534,7 +534,7 @@ async function onLinkScanSuccess(decodedText) {
 
             // 3. Connect & Send
             console.log(`Connecting to channel: login-sync:${payload.id}`);
-            const channel = supabase.channel(`login-sync:${payload.id}`);
+            const channel = window.supabase.channel(`login-sync:${payload.id}`);
 
             channel.subscribe(async (status) => {
                 console.log(`Channel Status: ${status}`);
@@ -557,7 +557,7 @@ async function onLinkScanSuccess(decodedText) {
                     // 4. Cleanup
                     if (res === 'ok') {
                         setTimeout(() => {
-                            supabase.removeChannel(channel);
+                            window.supabase.removeChannel(channel);
                             closeLinkDeviceModal();
                             showAlert("Device Linked Successfully!", "success");
                         }, 1000);

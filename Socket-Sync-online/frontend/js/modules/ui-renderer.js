@@ -12,7 +12,7 @@ async function loadMessages(partnerId) {
         // 1. Check for "Chat Clear" history
         let clearTime = null;
         try {
-            const { data: clearData } = await supabase
+            const { data: clearData } = await window.supabase
                 .from('chat_clear_history')
                 .select('cleared_at')
                 .eq('user_id', currentUser.user_id)
@@ -21,7 +21,7 @@ async function loadMessages(partnerId) {
             if (clearData) clearTime = new Date(clearData.cleared_at);
         } catch (e) { }
 
-        const { data: msgs, error } = await supabase
+        const { data: msgs, error } = await window.supabase
             .from('messages')
             .select('*')
             .or(`and(sender.eq.${currentUser.user_id},receiver.eq.${partnerId}),and(sender.eq.${partnerId},receiver.eq.${currentUser.user_id})`)
