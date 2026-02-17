@@ -136,7 +136,7 @@ function handleTypingEvent({ user, typing, chat }) {
                 // Try to find name in cache or DOM
                 if (nameSpan) {
                     // Get name from chat header or list
-                    const headerName = document.getElementById("chatUserName");
+                    const headerName = document.getElementById("chatHeaderTitle");
                     nameSpan.innerText = headerName ? headerName.innerText : "User";
                 }
             }
