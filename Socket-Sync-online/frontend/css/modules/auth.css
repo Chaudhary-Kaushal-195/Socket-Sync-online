@@ -134,6 +134,11 @@ body.menu-active .auth-box {
     /* Center it */
     height: auto;
     /* Ensure it fits content */
+    transition: transform var(--duration-normal) var(--ease-spring);
+}
+
+.info-modal-content:hover {
+    transform: scale(1.05);
 }
 
 /* Gradient border for info modals */
