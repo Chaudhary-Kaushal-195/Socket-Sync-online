@@ -7,7 +7,6 @@ pandas
 matplotlib
 qrcode
 numpy
-# Production
 gunicorn
 python-dotenv
-# firebase-admin (Removed for Supabase Migration)
+
