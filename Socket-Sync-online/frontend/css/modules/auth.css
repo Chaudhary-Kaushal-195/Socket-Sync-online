@@ -117,15 +117,17 @@ body.menu-active .auth-box {
 /* ========== INFO MODAL CONTENT (About, Contact, Help) ========== */
 /* Reuse glassmorphism card style */
 .info-modal-content {
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    background: rgba(30, 35, 50, 0.85);
+    /* More opaque for card feel */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     padding: 40px;
-    width: 100%;
-    max-width: 500px;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-xl);
-    border: var(--glass-border);
+    width: 90%;
+    /* Responsive width */
+    max-width: 480px;
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-primary);
     position: relative;
     z-index: 1;
