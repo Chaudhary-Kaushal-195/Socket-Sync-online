@@ -1,6 +1,22 @@
 // ================= MAIN CHAT LOGIC =================
 // API_BASE, socket, currentUser, currentChat, msgQueue, messageCache are in globals.js
 
+// Search Functionality
+const searchInput = document.getElementById("searchChats");
+if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+        const query = e.target.value.toLowerCase();
+        const items = document.querySelectorAll(".chat-item");
+        items.forEach(item => {
+            const nameEl = item.querySelector(".chat-name");
+            if (nameEl) {
+                const name = nameEl.innerText.toLowerCase();
+                item.style.display = name.includes(query) ? "flex" : "none";
+            }
+        });
+    });
+}
+
 // DOM Elements
 const ctxMenu = document.getElementById("ctxMenu");
 let ctxTarget = null;
