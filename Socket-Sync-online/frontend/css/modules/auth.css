@@ -432,7 +432,7 @@ body.menu-active .auth-box {
 
 .auth-nav-logo img {
     height: 36px;
-    border-radius: var(--radius-xs);
+    border-radius: 12px;
     transition: all var(--duration-fast) var(--ease-smooth);
 }
 
