@@ -18,7 +18,8 @@ function showAlert(message, type = 'danger') {
     if (!container) return;
 
     const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    // Removed 'fade' to ensure instant dismissal
+    alertDiv.className = `alert alert-${type} alert-dismissible show`;
     alertDiv.role = 'alert';
     alertDiv.innerHTML = `
         ${message}
@@ -26,9 +27,9 @@ function showAlert(message, type = 'danger') {
     `;
     container.appendChild(alertDiv);
     setTimeout(() => {
-        if (alertDiv) {
-            alertDiv.classList.remove('show');
-            alertDiv.addEventListener('transitionend', () => alertDiv.remove());
+        // Check if still in DOM
+        if (alertDiv && alertDiv.isConnected) {
+            alertDiv.remove();
         }
     }, 3000);
 }
