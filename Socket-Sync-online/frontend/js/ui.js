@@ -23,9 +23,15 @@ function showAlert(message, type = 'danger') {
     alertDiv.role = 'alert';
     alertDiv.innerHTML = `
         ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <button type="button" class="btn-close" aria-label="Close"></button>
     `;
+
+    // Manual Close Handling for Instant Removal
+    const closeBtn = alertDiv.querySelector('.btn-close');
+    closeBtn.onclick = () => alertDiv.remove();
+
     container.appendChild(alertDiv);
+
     setTimeout(() => {
         // Check if still in DOM
         if (alertDiv && alertDiv.isConnected) {
