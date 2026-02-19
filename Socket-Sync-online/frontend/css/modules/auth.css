@@ -314,7 +314,7 @@ body.menu-active .auth-box {
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: all var(--duration-slow) var(--ease-spring);
+    transition: all var(--duration-fast) var(--ease-spring);
     z-index: 10;
     padding-top: 70px;
 }
