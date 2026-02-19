@@ -392,11 +392,33 @@ async function signup() {
 // ================= SOCIAL SIGNUP =================
 
 window.signupWithGoogle = async function () {
-    alert("Social login is currently being migrated to Supabase. This feature will be available soon.");
+    try {
+        const { data, error } = await window.supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: window.location.origin + '/chat'
+            }
+        });
+        if (error) throw error;
+    } catch (e) {
+        console.error("Google Signup Error", e);
+        alert("Google Signup Error: " + e.message);
+    }
 }
 
 window.signupWithGithub = async function () {
-    alert("Social login is currently being migrated to Supabase. This feature will be available soon.");
+    try {
+        const { data, error } = await window.supabase.auth.signInWithOAuth({
+            provider: 'github',
+            options: {
+                redirectTo: window.location.origin + '/chat'
+            }
+        });
+        if (error) throw error;
+    } catch (e) {
+        console.error("GitHub Signup Error", e);
+        alert("GitHub Signup Error: " + e.message);
+    }
 }
 
 // Attach globals for HTML
