@@ -82,6 +82,14 @@ body {
     /* animation: authBoxEnter var(--duration-slower) var(--ease-spring); */
 }
 
+.zoom-card {
+    transition: transform var(--duration-normal) var(--ease-spring);
+}
+
+.zoom-card:hover {
+    transform: scale(1.05);
+}
+
 @keyframes authBoxEnter {
     from {
         opacity: 0;
