@@ -464,7 +464,7 @@ body.light-mode .msg-tick i.read {
     align-items: center;
     border-top: var(--glass-border);
     border-radius: var(--radius-lg);
-    margin: 0 12px 12px 12px;
+    margin: 8px 8px 8px 8px;
     box-shadow: var(--shadow-md);
     position: relative;
     z-index: 10;
@@ -696,7 +696,7 @@ body.light-mode .msg-tick i.read {
 
     .input-area {
         padding: 12px 10px;
-        margin: 0 6px 8px 6px;
+        margin: 6px 6px 6px 6px;
         margin-bottom: max(8px, env(safe-area-inset-bottom, 0px));
         gap: 6px;
     }
