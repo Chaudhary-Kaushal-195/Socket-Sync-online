@@ -38,7 +38,7 @@
     -webkit-backdrop-filter: var(--glass-blur);
     border-bottom: var(--glass-border);
     border-radius: var(--radius-md);
-    margin: 12px 12px 0 12px;
+    margin: 8px 8px 8px 8px;
     display: flex;
     align-items: center;
     gap: 16px;
