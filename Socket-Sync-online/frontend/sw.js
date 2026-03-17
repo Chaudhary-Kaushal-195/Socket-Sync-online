@@ -1,4 +1,4 @@
-const CACHE_NAME = 'socket-sync-cache-v2';
+const CACHE_NAME = 'socket-sync-cache-v3';
 const urlsToCache = [
   '/',
   '/login',
@@ -14,9 +14,17 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        return cache.addAll(urlsToCache);
+        // Use addAll for critical assets, but suppress errors if some fail
+        // This prevents the SW from getting stuck in the "installing" phase
+        return Promise.allSettled(urlsToCache.map(url => {
+          return cache.add(url).catch(err => {
+            console.warn(`Failed to cache ${url}:`, err);
+          });
+        }));
       })
   );
+  // Force the waiting service worker to become the active service worker.
+  self.skipWaiting();
 });
 
 self.addEventListener('fetch', event => {
@@ -48,6 +56,9 @@ self.addEventListener('activate', event => {
           }
         })
       );
+    }).then(() => {
+        // Take control of all clients immediately
+        return self.clients.claim();
     })
   );
 });
