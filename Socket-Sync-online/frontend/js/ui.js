@@ -11,6 +11,12 @@ function updateThemeIcon(isLight) {
     if (btn) {
         btn.className = isLight ? "fas fa-sun logout-btn" : "fas fa-moon logout-btn";
     }
+    
+    // Dynamically update mobile browser status bar color
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+        metaThemeColor.setAttribute("content", isLight ? "#f8fafc" : "#121212");
+    }
 }
 
 function showAlert(message, type = 'danger') {
