@@ -696,10 +696,10 @@ body.light-mode .msg-tick i.read {
 
     .input-area {
         padding: 8px 10px;
-        padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
         margin: 0 6px 8px 6px;
         margin-bottom: max(8px, env(safe-area-inset-bottom, 0px));
         gap: 6px;
+        align-items: center;
     }
 
     .input-area button {
