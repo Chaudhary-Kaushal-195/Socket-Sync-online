@@ -1,4 +1,4 @@
-const CACHE_NAME = 'socket-sync-cache-v4';
+const CACHE_NAME = 'socket-sync-cache-v5';
 const urlsToCache = [
   '/',
   '/login',

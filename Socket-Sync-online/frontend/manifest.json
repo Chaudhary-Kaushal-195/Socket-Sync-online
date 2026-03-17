@@ -4,8 +4,8 @@
   "description": "A real-time synchronization app.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#121212",
-  "theme_color": "#121212",
+  "background_color": "#10141c",
+  "theme_color": "#10141c",
   "orientation": "portrait",
   "icons": [
     {

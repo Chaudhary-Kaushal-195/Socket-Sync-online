@@ -34,7 +34,8 @@
 /* ========== MAIN HEADER ========== */
 .header {
     height: var(--header-height);
-    flex-shrink: 0; /* Prevent header from shrinking */
+    flex-shrink: 0;
+    /* Prevent header from shrinking */
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
@@ -180,7 +181,8 @@ body.light-mode .sidebar-toggle-btn:hover {
     position: relative;
     margin: 0 !important;
     padding: 0 !important;
-    min-height: 0; /* Crucial: allows flex children to shrink and scroll instead of overflowing */
+    min-height: 0;
+    /* Crucial: allows flex children to shrink and scroll instead of overflowing */
     min-width: 0;
 }
 

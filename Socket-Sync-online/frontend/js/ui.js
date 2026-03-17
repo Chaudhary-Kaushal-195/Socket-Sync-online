@@ -12,10 +12,10 @@ function updateThemeIcon(isLight) {
         btn.className = isLight ? "fas fa-sun logout-btn" : "fas fa-moon logout-btn";
     }
     
-    // Dynamically update mobile browser status bar color
+    // Dynamically update mobile browser status bar color to exactly match blended glass header
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-        metaThemeColor.setAttribute("content", isLight ? "#f8fafc" : "#121212");
+        metaThemeColor.setAttribute("content", isLight ? "#fefefe" : "#10141c");
     }
 }
 
@@ -471,7 +471,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let refreshing;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
             if (refreshing) return;
-            
+
             // Aggressively clear old caches to prevent stale data across PWA instances
             caches.keys().then((cacheNames) => {
                 cacheNames.forEach((cacheName) => {
@@ -496,7 +496,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // PWA Install & Update Helper Functions
-window.installPWA = async function() {
+window.installPWA = async function () {
     const installBtn = document.getElementById('installAppBtn');
     if (!window.deferredPrompt) {
         return;
