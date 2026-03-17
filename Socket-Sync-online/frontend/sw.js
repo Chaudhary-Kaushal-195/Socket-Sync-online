@@ -1,4 +1,4 @@
-const CACHE_NAME = 'socket-sync-cache-v3';
+const CACHE_NAME = 'socket-sync-cache-v4';
 const urlsToCache = [
   '/',
   '/login',
@@ -28,13 +28,23 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
+  // Use Network-First caching strategy for most assets to ensure updates
   event.respondWith(
-    caches.match(event.request)
+    fetch(event.request)
       .then(response => {
-        if (response) {
-          return response;
+        // If network fetch is successful, clone response and update the cache
+        if (response && response.status === 200 && response.type === 'basic') {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME)
+            .then(cache => {
+              cache.put(event.request, responseToCache);
+            });
         }
-        return fetch(event.request);
+        return response;
+      })
+      .catch(() => {
+        // If offline or network fails, fallback to cache
+        return caches.match(event.request);
       })
   );
 });

@@ -471,7 +471,15 @@ document.addEventListener("DOMContentLoaded", () => {
         let refreshing;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
             if (refreshing) return;
-            window.location.reload();
+            
+            // Aggressively clear old caches to prevent stale data across PWA instances
+            caches.keys().then((cacheNames) => {
+                cacheNames.forEach((cacheName) => {
+                    caches.delete(cacheName);
+                });
+            }).then(() => {
+                window.location.reload(true);
+            });
             refreshing = true;
         });
     }
