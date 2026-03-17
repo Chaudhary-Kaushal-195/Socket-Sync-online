@@ -13,13 +13,19 @@
     }
 }
 
-body {
+html, body {
     margin: 0;
-    height: 100vh;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    overscroll-behavior: none; /* Prevents pull-to-refresh and bounce effects */
+}
+
+body {
     background-color: var(--bg-dark);
     font-family: var(--font-family);
     color: var(--text-primary);
-    overflow: hidden;
     animation: fadeIn var(--duration-slow) var(--ease-out);
 
     /* Smooth font rendering */

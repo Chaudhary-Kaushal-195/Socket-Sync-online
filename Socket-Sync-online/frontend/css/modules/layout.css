@@ -3,7 +3,9 @@
    ========================================= */
 
 .app {
-    height: 100vh;
+    height: 100%;
+    height: 100dvh; /* Dynamic viewport height support */
+    width: 100%;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -29,6 +31,7 @@
 /* ========== MAIN HEADER ========== */
 .header {
     height: var(--header-height);
+    flex-shrink: 0; /* Prevent header from shrinking */
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
@@ -171,7 +174,6 @@ body.light-mode .sidebar-toggle-btn:hover {
     display: flex;
     flex-wrap: nowrap;
     overflow: hidden;
-    height: calc(100vh - var(--header-height));
     position: relative;
     margin: 0 !important;
     padding: 0 !important;
@@ -533,16 +535,6 @@ body.light-mode .chat-item.active {
         color: #ff4d4d;
         /* Red for Light Mode */
         text-shadow: 0 0 8px rgba(255, 77, 77, 0.4);
-    }
-
-    .app {
-        height: 100dvh;
-        /* Mobile viewport fix */
-    }
-
-    .main-row {
-        height: calc(100dvh - var(--header-height));
-        /* Mobile viewport fix */
     }
 
     .sidebar {
