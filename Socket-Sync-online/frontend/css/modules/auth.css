@@ -846,6 +846,7 @@ body.light-mode .github-btn i {
 
     #themeToggle {
         order: 3;
+        margin-left: auto;
         display: flex;
         align-items: center;
     }
