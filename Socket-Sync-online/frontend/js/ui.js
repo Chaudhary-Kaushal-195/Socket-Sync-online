@@ -441,8 +441,88 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     });
+
+    // 3. Register Service Worker & Handle PWA Update
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/frontend/sw.js').then(registration => {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            showUpdateNotification(newWorker);
+                        }
+                    });
+                });
+            }, err => {
+                console.log('ServiceWorker registration failed: ', err);
+            });
+        });
+
+        // Handle reloading when updated SW takes control
+        let refreshing;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (refreshing) return;
+            window.location.reload();
+            refreshing = true;
+        });
+    }
+
+    // 4. Handle PWA Install Prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        window.deferredPrompt = e;
+        const installBtn = document.getElementById('installAppBtn');
+        if (installBtn) {
+            installBtn.style.display = 'inline-flex';
+        }
+    });
 });
 
+// PWA Install & Update Helper Functions
+window.installPWA = async function() {
+    const installBtn = document.getElementById('installAppBtn');
+    if (!window.deferredPrompt) {
+        return;
+    }
+    window.deferredPrompt.prompt();
+    const { outcome } = await window.deferredPrompt.userChoice;
+    console.log(`User response to the install prompt: ${outcome}`);
+    window.deferredPrompt = null;
+    if (installBtn) {
+        installBtn.style.display = 'none';
+    }
+}
+
+function showUpdateNotification(newWorker) {
+    const container = document.getElementById('alert-container');
+    if (!container) return;
+
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-info alert-dismissible show d-flex justify-content-between align-items-center p-3`;
+    alertDiv.role = 'alert';
+    alertDiv.innerHTML = `
+        <div>
+            <strong>Update Available!</strong> A new version of Socket-Sync is ready.
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-primary" id="updateAppBtn">Update Now</button>
+            <button type="button" class="btn-close m-0 position-static" aria-label="Close"></button>
+        </div>
+    `;
+
+    const closeBtn = alertDiv.querySelector('.btn-close');
+    closeBtn.onclick = () => alertDiv.remove();
+
+    const updateBtn = alertDiv.querySelector('#updateAppBtn');
+    updateBtn.onclick = () => {
+        newWorker.postMessage({ type: 'SKIP_WAITING' });
+    };
+
+    container.appendChild(alertDiv);
+}
 
 function scrollToBottom() {
     const messagesBox = document.getElementById("messages");
