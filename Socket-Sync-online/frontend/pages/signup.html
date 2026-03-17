@@ -32,9 +32,7 @@
 
     <!-- Auth Navbar -->
     <nav class="auth-nav">
-        <div class="auth-burger" onclick="toggleAuthMenu()">
-            <i class="fas fa-bars"></i>
-        </div>
+
         <a href="#" class="auth-nav-logo">
             <img src="../material/images/Socket-Sync-logo.png" alt="Logo">
             Socket-Sync
@@ -49,6 +47,14 @@
             tabindex="0" role="button" style="font-size: 1.1rem; cursor: pointer; color: var(--text-primary);"></i>
         <a href="/login" class="auth-btn-sm">Login</a>
     </nav>
+
+    <!-- Navigation Dots (Mobile Only) -->
+    <div class="carousel-dots d-md-none">
+        <div class="dot active" onclick="switchView(0)"></div>
+        <div class="dot" onclick="switchView(1)"></div>
+        <div class="dot" onclick="switchView(2)"></div>
+        <div class="dot" onclick="switchView(3)"></div>
+    </div>
 
     <!-- Home View -->
     <div id="view-home" class="carousel-view view-center">
@@ -199,11 +205,38 @@
                 nextView.classList.add('view-center');
             });
 
+            // Update dots
+            const dots = document.querySelectorAll('.carousel-dots .dot');
+            if (dots.length > 0) {
+                dots[currentIndex].classList.remove('active');
+                dots[targetIndex].classList.add('active');
+            }
+
             currentIndex = targetIndex;
         }
 
-        function toggleAuthMenu() {
-            document.body.classList.toggle("menu-active");
+        // Swipe Detection
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+
+        function handleSwipe() {
+            const threshold = 50; // minimum distance to register as swipe
+            if (touchStartX - touchEndX > threshold) {
+                // Swipe Left (Next)
+                if (currentIndex < views.length - 1) switchView(currentIndex + 1);
+            } else if (touchEndX - touchStartX > threshold) {
+                // Swipe Right (Previous)
+                if (currentIndex > 0) switchView(currentIndex - 1);
+            }
         }
     </script>
 

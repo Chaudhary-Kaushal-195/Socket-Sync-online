@@ -787,19 +787,30 @@ body.light-mode .github-btn i {
         height: 30px;
     }
 
-    .auth-burger {
+    .carousel-dots {
         display: flex;
-        /* Better for icon alignment */
-        align-items: center;
-        order: 1;
-        height: 40px;
-        /* Match button height for alignment */
-        width: 40px;
-        font-size: 1.3rem;
-        /* Slightly smaller icon */
-        color: var(--text-primary);
+        justify-content: center;
+        gap: 8px;
+        position: fixed;
+        top: 70px;
+        left: 0;
+        width: 100%;
+        z-index: 2010;
+    }
+
+    .carousel-dots .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
         cursor: pointer;
-        z-index: 2020;
+    }
+
+    .carousel-dots .dot.active {
+        background: var(--primary-color);
+        width: 16px;
+        border-radius: 4px;
     }
 
     .auth-nav-logo {
