@@ -11,6 +11,14 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem("theme") || "dark";
+            if (savedTheme === "light") {
+                document.documentElement.classList.add("light-mode");
+            }
+        })();
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/modules/supabase-client.js"></script>
@@ -36,7 +44,11 @@
             <a href="#" class="auth-link" onclick="switchView(2)">Contact Us</a>
             <a href="#" class="auth-link" onclick="switchView(3)">Help/Support</a>
         </div>
-        <a href="/signup" class="auth-btn-sm">Sign Up</a>
+        <div class="d-flex align-items-center gap-2">
+            <i id="themeToggle" class="fas fa-moon logout-btn" onclick="toggleTheme()" title="Toggle Theme"
+                tabindex="0" role="button" style="font-size: 1.1rem; cursor: pointer;"></i>
+            <a href="/signup" class="auth-btn-sm">Sign Up</a>
+        </div>
     </nav>
 
     <div id="view-home" class="carousel-view view-center">
@@ -209,6 +221,7 @@
         }
     </script>
 
+    <script src="../js/ui.js?v=39"></script>
     <script type="module" src="../js/login.js?v=39"></script>
 </body>
 

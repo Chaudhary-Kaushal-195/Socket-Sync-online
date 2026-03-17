@@ -12,6 +12,14 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem("theme") || "dark";
+            if (savedTheme === "light") {
+                document.documentElement.classList.add("light-mode");
+            }
+        })();
+    </script>
 
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -38,7 +46,11 @@
             <a href="#" class="auth-link" onclick="switchView(2)">Contact Us</a>
             <a href="#" class="auth-link" onclick="switchView(3)">Help/Support</a>
         </div>
-        <a href="/login" class="auth-btn-sm">Login</a>
+        <div class="d-flex align-items-center gap-2">
+            <i id="themeToggle" class="fas fa-moon logout-btn" onclick="toggleTheme()" title="Toggle Theme"
+                tabindex="0" role="button" style="font-size: 1.1rem; cursor: pointer;"></i>
+            <a href="/login" class="auth-btn-sm">Login</a>
+        </div>
     </nav>
 
     <!-- Home View -->
@@ -85,6 +97,7 @@
         </div>
     </div>
 
+    <script src="../js/ui.js?v=39"></script>
     <script type="module" src="../js/signup.js"></script>
 
     <!-- Info Modals (Carousel Views) -->

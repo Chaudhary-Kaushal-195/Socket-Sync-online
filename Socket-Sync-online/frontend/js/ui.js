@@ -672,3 +672,17 @@ async function onLinkScanSuccess(decodedText) {
         console.warn("Scan Error", e);
     }
 }
+// Initialize theme on load if themeToggle exists
+document.addEventListener("DOMContentLoaded", () => {
+    const savedTheme = localStorage.getItem("theme") || "dark";
+    const isLight = savedTheme === "light";
+    
+    // Ensure body also has the class (html has it from inline script)
+    if (isLight) {
+        document.body.classList.add("light-mode");
+    } else {
+        document.body.classList.remove("light-mode");
+    }
+    
+    updateThemeIcon(isLight);
+});
