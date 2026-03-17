@@ -2,21 +2,23 @@
   "name": "Socket-Sync",
   "short_name": "Socket-Sync",
   "description": "A real-time synchronization app.",
-  "start_url": "/frontend/pages/login.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "#6366f1",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/frontend/material/images/Socket-Sync-logo.png",
+      "src": "/material/images/Socket-Sync-logo.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/frontend/material/images/Socket-Sync-logo.png",
+      "src": "/material/images/Socket-Sync-logo.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

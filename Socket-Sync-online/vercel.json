@@ -22,6 +22,14 @@
             "destination": "/frontend/pages/oauth-callback.html"
         },
         {
+            "source": "/manifest.json",
+            "destination": "/frontend/manifest.json"
+        },
+        {
+            "source": "/sw.js",
+            "destination": "/frontend/sw.js"
+        },
+        {
             "source": "/css/:path*",
             "destination": "/frontend/css/:path*"
         },

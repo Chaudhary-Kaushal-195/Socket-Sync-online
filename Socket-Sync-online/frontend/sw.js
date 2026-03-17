@@ -1,12 +1,13 @@
-const CACHE_NAME = 'socket-sync-cache-v1';
+const CACHE_NAME = 'socket-sync-cache-v2';
 const urlsToCache = [
-  '/frontend/pages/login.html',
-  '/frontend/pages/signup.html',
-  '/frontend/pages/chat.html',
-  '/frontend/css/style.css',
-  '/frontend/js/ui.js',
-  '/frontend/js/chat.js',
-  '/frontend/material/images/Socket-Sync-logo.png'
+  '/',
+  '/login',
+  '/signup',
+  '/chat',
+  '/css/style.css',
+  '/js/ui.js',
+  '/js/chat.js',
+  '/material/images/Socket-Sync-logo.png'
 ];
 
 self.addEventListener('install', event => {
