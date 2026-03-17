@@ -1,6 +1,7 @@
 // ... (Theme toggle as before)
 function toggleTheme() {
     document.body.classList.toggle("light-mode");
+    document.documentElement.classList.toggle("light-mode");
     const isLight = document.body.classList.contains("light-mode");
     localStorage.setItem("theme", isLight ? "light" : "dark");
     updateThemeIcon(isLight);
@@ -12,10 +13,10 @@ function updateThemeIcon(isLight) {
         btn.className = isLight ? "fas fa-sun logout-btn" : "fas fa-moon logout-btn";
     }
     
-    // Dynamically update mobile browser status bar color to exactly match blended glass header
+    // Dynamically update mobile browser status bar color with precise theme hex codes
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-        metaThemeColor.setAttribute("content", isLight ? "#fefefe" : "#10141c");
+        metaThemeColor.setAttribute("content", isLight ? "#f8fafc" : "#0a0d14");
     }
 }
 
