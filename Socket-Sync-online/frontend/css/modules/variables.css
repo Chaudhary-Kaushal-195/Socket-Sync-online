@@ -97,7 +97,7 @@
 /* =========================================
    LIGHT MODE - Modern Minimalist
    ========================================= */
-.light-mode {
+body.light-mode {
    /* Brand - Soft Indigo Accent */
    --primary-gradient: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
    --primary-color: #6366F1;

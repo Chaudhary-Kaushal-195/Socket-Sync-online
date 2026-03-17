@@ -14,9 +14,8 @@
     <link rel="stylesheet" href="../css/style.css">
     <script>
         (function() {
-            const savedTheme = localStorage.getItem("theme") || "dark";
-            if (savedTheme === "light") {
-                document.documentElement.classList.add("light-mode");
+            if (localStorage.getItem("theme") === "light") {
+                document.body && document.body.classList.add("light-mode");
             }
         })();
     </script>

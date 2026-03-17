@@ -20,7 +20,6 @@ html, body {
     width: 100%;
     overflow: hidden;
     overscroll-behavior: none; /* Prevents pull-to-refresh and bounce effects */
-    background-color: var(--bg-dark);
 }
 
 body {
