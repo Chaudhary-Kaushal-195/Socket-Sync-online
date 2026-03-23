@@ -301,6 +301,12 @@ function openChat(userId, name, avatar) {
 
     document.getElementById("chatHeaderTitle").innerText = name;
     document.getElementById("chatAvatar").src = avatar;
+    
+    // Show Call Buttons
+    const btnVoice = document.getElementById("btnVoiceCall");
+    const btnVideo = document.getElementById("btnVideoCall");
+    if (btnVoice) btnVoice.classList.remove("hidden");
+    if (btnVideo) btnVideo.classList.remove("hidden");
 
     // Initial Online Status
     const statusEl = document.getElementById("chatStatus");

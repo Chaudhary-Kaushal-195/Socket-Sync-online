@@ -726,3 +726,43 @@ body.light-mode .msg-tick i.read {
         border-radius: var(--radius-lg) !important;
     }
 }
+
+/* ========== CALL UI ========== */
+.audio-wave {
+    width: 6px;
+    height: 30px;
+    background: var(--primary-color);
+    border-radius: 3px;
+    animation: wave 1s infinite ease-in-out;
+}
+
+@keyframes wave {
+    0%, 100% { transform: scaleY(0.5); }
+    50% { transform: scaleY(1); }
+}
+
+#btnVoiceCall.hidden, #btnVideoCall.hidden {
+    display: none !important;
+}
+
+#localVideo {
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+.call-controls .btn-light {
+    background: rgba(255,255,255,0.2) !important;
+    border: none !important;
+    color: white !important;
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: all 0.2s ease;
+}
+
+.call-controls .btn-light:hover {
+    background: rgba(255,255,255,0.3) !important;
+    transform: scale(1.05);
+}

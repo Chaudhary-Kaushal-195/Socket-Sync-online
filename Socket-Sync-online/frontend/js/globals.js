@@ -15,6 +15,14 @@ const blockedUsers = new Set(); // <userId>
 let msgQueue = JSON.parse(localStorage.getItem("msgQueue") || "[]");
 let selectedFiles = [];
 
+// WebRTC Call Globals
+let localStream = null;
+let remoteStream = null;
+let peerConnection = null;
+let callChannel = null;
+let isVideoCall = false;
+let incomingCallData = null;
+
 // Expose to window to ensure access across scripts
 window.currentUser = currentUser;
 window.currentChat = currentChat;
