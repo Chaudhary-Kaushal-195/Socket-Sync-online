@@ -8,6 +8,8 @@ const configuration = {
 };
 
 // Initialize Signaling Channel
+let iceCandidateQueue = [];
+
 function initCallChannel() {
     if (!window.supabase) return;
     
@@ -85,6 +87,7 @@ async function handleSignalingData(payload) {
     const { from, type, data } = payload;
     
     if (type === 'offer') {
+        iceCandidateQueue = []; // Reset queue
         incomingCallData = { from, offer: data.sdp, isVideo: data.isVideo };
         showIncomingCallModal(data.callerName, data.callerAvatar, data.isVideo);
     } 
@@ -92,15 +95,24 @@ async function handleSignalingData(payload) {
         if (peerConnection) {
             await peerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp));
             document.getElementById("callDuration").innerText = "Connected";
+            
+            // Process queued candidates
+            for (let candidate of iceCandidateQueue) {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(candidate)).catch(e => console.error(e));
+            }
+            iceCandidateQueue = [];
         }
     } 
     else if (type === 'ice-candidate') {
-        if (peerConnection) {
+        if (peerConnection && peerConnection.remoteDescription) {
             try {
                 await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
             } catch (e) {
                 console.error("Error adding received ice candidate", e);
             }
+        } else {
+            // Queue if remoteDescription is not yet set
+            iceCandidateQueue.push(data.candidate);
         }
     }
     else if (type === 'decline') {
@@ -131,6 +143,13 @@ async function acceptCall() {
         });
 
         await peerConnection.setRemoteDescription(new RTCSessionDescription(incomingCallData.offer));
+        
+        // Process queued ice candidates correctly
+        for (let candidate of iceCandidateQueue) {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(candidate)).catch(e => console.error(e));
+        }
+        iceCandidateQueue = [];
+        
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
 
@@ -143,6 +162,7 @@ async function acceptCall() {
     } catch (err) {
         console.error("Error accepting call", err);
         alert("Could not access camera or microphone.");
+        cleanupCall();
     }
 }
 
@@ -175,14 +195,21 @@ function createPeerConnection(targetUser) {
     };
 
     peerConnection.ontrack = event => {
-        if (!remoteStream) {
-            remoteStream = new MediaStream();
-            const remoteVideoEl = document.getElementById('remoteVideo');
+        const remoteVideoEl = document.getElementById('remoteVideo');
+        if (event.streams && event.streams[0]) {
+            remoteStream = event.streams[0];
             if (remoteVideoEl) {
                 remoteVideoEl.srcObject = remoteStream;
             }
+        } else {
+            if (!remoteStream) {
+                remoteStream = new MediaStream();
+                if (remoteVideoEl) {
+                    remoteVideoEl.srcObject = remoteStream;
+                }
+            }
+            remoteStream.addTrack(event.track);
         }
-        remoteStream.addTrack(event.track);
     };
 
     peerConnection.onconnectionstatechange = () => {
@@ -198,10 +225,17 @@ function cleanupCall() {
         peerConnection = null;
     }
     if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
+        localStream.getTracks().forEach(track => {
+            track.stop();
+        });
         localStream = null;
     }
-    remoteStream = null;
+    if (remoteStream) {
+        remoteStream.getTracks().forEach(track => track.stop());
+        remoteStream = null;
+    }
+    
+    iceCandidateQueue = [];
     incomingCallData = null;
     
     const localVideoEl = document.getElementById('localVideo');
