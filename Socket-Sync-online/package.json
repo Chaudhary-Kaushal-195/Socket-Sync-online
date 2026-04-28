@@ -1,0 +1,14 @@
+{
+  "name": "socketsync-root",
+  "version": "2.0.0",
+  "description": "Root package for MERN Stack SocketSync",
+  "scripts": {
+    "install:all": "npm install --prefix backend-node && npm install --prefix frontend-react",
+    "start:backend": "npm start --prefix backend-node",
+    "start:frontend": "npm run dev --prefix frontend-react",
+    "dev": "npx concurrently \"npm run start:backend\" \"npm run start:frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
