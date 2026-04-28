@@ -14,9 +14,11 @@ try {
   if (process.env.FIREBASE_CREDENTIALS) {
     cred = admin.credential.cert(JSON.parse(process.env.FIREBASE_CREDENTIALS));
   } else if (fs.existsSync('../serviceAccountKey.json')) {
-    cred = admin.credential.cert(require('../serviceAccountKey.json'));
+    const rawdata = fs.readFileSync('../serviceAccountKey.json', 'utf8');
+    cred = admin.credential.cert(JSON.parse(rawdata));
   } else if (fs.existsSync('./serviceAccountKey.json')) {
-    cred = admin.credential.cert(require('./serviceAccountKey.json'));
+    const rawdata = fs.readFileSync('./serviceAccountKey.json', 'utf8');
+    cred = admin.credential.cert(JSON.parse(rawdata));
   }
 
   if (cred) {
