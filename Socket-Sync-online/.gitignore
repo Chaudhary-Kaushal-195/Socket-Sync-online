@@ -16,3 +16,5 @@ uploads/
 *.log
 serviceAccountKey.json
 Socket-Sync-offline-final.zip
+node_modules/
+.env
