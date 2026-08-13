@@ -2,19 +2,21 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import pandas as pd
 import sys
-import mysql.connector
 import altair as alt
 import warnings
+import urllib.request
+import json
+import os
 
 # Suppress pandas SQLALCHEMY warning
 warnings.filterwarnings('ignore', category=UserWarning, module='pandas')
 
-# Ensure we can import from backend
-import os
-base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-backend_path = os.path.join(base_dir, 'backend')
-sys.path.append(backend_path)
-from database import Database
+# Supabase Credentials (Env Var or Default)
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://zxeetbzheedapqnnhqob.supabase.co")
+SUPABASE_ANON_KEY = os.getenv(
+    "SUPABASE_ANON_KEY",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp4ZWV0YnpoZWVkYXBxbm5ocW9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwNDM2MTIsImV4cCI6MjA4NjYxOTYxMn0.eS5olENoHHsYvm3ZifEMNt2pNhcrpibq3KMIcGAcy14"
+)
 
 # Page Config
 st.set_page_config(
@@ -23,35 +25,39 @@ st.set_page_config(
     layout="wide"
 )
 
-# Initialize Database
-@st.cache_resource
-def get_db():
-    return Database()
-
-try:
-    db = get_db()
-except Exception as e:
-    st.error(f"Failed to connect to database: {e}")
-    st.stop()
-
 # Helper Functions
-def get_all_messages():
-    conn = db.get_connection()
-    try:
-        query = "SELECT sender, receiver, timestamp, file_type FROM messages"
-        df = pd.read_sql(query, conn)
-        return df
-    finally:
-        conn.close()
+def fetch_supabase(endpoint_path):
+    url = f"{SUPABASE_URL.rstrip('/')}/rest/v1/{endpoint_path.lstrip('/')}"
+    req = urllib.request.Request(url, headers={
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
+    })
+    with urllib.request.urlopen(req) as response:
+        return json.loads(response.read().decode('utf-8'))
 
 def get_users_dict():
-    conn = db.get_connection()
     try:
-        cur = conn.cursor(dictionary=True)
-        cur.execute("SELECT user_id, name FROM users")
-        return {u['user_id']: u['name'] for u in cur.fetchall()}
-    finally:
-        conn.close()
+        profiles = fetch_supabase("profiles?select=id,name,user_id")
+        users_map = {}
+        for p in profiles:
+            name = p.get('name') or p.get('user_id') or "Unknown"
+            users_map[p['id']] = name
+            if p.get('user_id'):
+                users_map[p['user_id']] = name
+        return users_map
+    except Exception as e:
+        st.error(f"Error fetching profiles from Supabase: {e}")
+        return {}
+
+def get_all_messages():
+    try:
+        msgs = fetch_supabase("messages?select=sender,receiver,timestamp,file_type")
+        if not msgs:
+            return pd.DataFrame(columns=['sender', 'receiver', 'timestamp', 'file_type'])
+        return pd.DataFrame(msgs)
+    except Exception as e:
+        st.error(f"Error fetching messages from Supabase: {e}")
+        return pd.DataFrame(columns=['sender', 'receiver', 'timestamp', 'file_type'])
 
 # Load Data
 st.sidebar.title("Socket-Sync 📊")

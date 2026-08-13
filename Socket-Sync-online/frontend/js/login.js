@@ -449,7 +449,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ================= SOCIAL LOGIN =================
-// import { auth, googleProvider, githubProvider, signInWithPopup } from './firebase-config.js';
 
 window.loginWithGoogle = async function () {
     try {
