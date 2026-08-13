@@ -1,26 +1,49 @@
 {
     "version": 2,
-    "outputDirectory": "frontend",
     "rewrites": [
         {
             "source": "/",
-            "destination": "/pages/login.html"
+            "destination": "/frontend/pages/login.html"
         },
         {
             "source": "/login",
-            "destination": "/pages/login.html"
+            "destination": "/frontend/pages/login.html"
         },
         {
             "source": "/signup",
-            "destination": "/pages/signup.html"
+            "destination": "/frontend/pages/signup.html"
         },
         {
             "source": "/chat",
-            "destination": "/pages/chat.html"
+            "destination": "/frontend/pages/chat.html"
         },
         {
             "source": "/oauth-callback",
-            "destination": "/pages/oauth-callback.html"
+            "destination": "/frontend/pages/oauth-callback.html"
+        },
+        {
+            "source": "/pages/:path*",
+            "destination": "/frontend/pages/:path*"
+        },
+        {
+            "source": "/css/:path*",
+            "destination": "/frontend/css/:path*"
+        },
+        {
+            "source": "/js/:path*",
+            "destination": "/frontend/js/:path*"
+        },
+        {
+            "source": "/material/:path*",
+            "destination": "/frontend/material/:path*"
+        },
+        {
+            "source": "/manifest.json",
+            "destination": "/frontend/manifest.json"
+        },
+        {
+            "source": "/sw.js",
+            "destination": "/frontend/sw.js"
         }
     ]
 }
