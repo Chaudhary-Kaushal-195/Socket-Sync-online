@@ -1,0 +1,432 @@
+
+// ================= SUPABASE REALTIME CLIENT =================
+
+let realtimeChannel = null;
+let typingChannel = null; // Separate channel for ephemeral typing events
+
+function setupSupabaseRealtime() {
+    if (!currentUser) return;
+
+    console.log("Setting up Supabase Realtime for user:", currentUser.user_id);
+
+    // Subscribe to ALL messages where sender or receiver is ME.
+    // Row Level Security (RLS) protects the data, but Realtime filters strictly by column value if specified.
+    // However, Supabase Realtime 'postgres_changes' filter is limited.
+    // Best pattern: Listen to "messages" table public-wide (filter in client? No, insecure/spammy).
+    // Better: Listen with a filter. But "OR" filters are hard in Realtime syntax.
+    // Workaround: Listen to the whole table, but rely on RLS?
+    // NOTE: Realtime by default broadcasts ALL changes to subscribed tables if RLS is not enabled for realtime.
+    // If RLS is enabled for realtime (WAL), we need to be authenticated (which we are via supabase-client.js if we set the session).
+
+    // Actually, simple filtering:
+    // We can't easily filter "sender=me OR receiver=me".
+    // We will listen to the table. RLS *does not* apply to Realtime broadcast stream by default unless "Project Settings > Realtime > Enforce RLS" is on.
+    // Assuming RLS is enforced for "select", Realtime might send everything if not careful.
+    // For this implementation, we'll implement client-side filtering for simplicity, 
+    // assuming the volume isn't massive yet.
+
+    // assuming the volume isn't massive yet.
+
+    realtimeChannel = window.supabase
+        .channel('public:messages')
+        .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'messages' },
+            (payload) => {
+                handleRealtimeEvent(payload);
+            }
+        )
+        .on('presence', { event: 'sync' }, () => {
+            const state = realtimeChannel.presenceState();
+            console.log('Presence Sync:', state);
+
+            // Rebuild onlineUsers Set
+            onlineUsers.clear();
+            for (const key in state) {
+                // key is likely user_id if we set it, or random UUID. 
+                // Supabase presenceState returns object with keys.
+                // state[key] is array of presences.
+                state[key].forEach(p => {
+                    if (p.user_id) onlineUsers.add(p.user_id);
+                });
+            }
+            updateAllUserStatuses();
+        })
+        .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+            console.log('Presence Join:', newPresences);
+            newPresences.forEach(p => {
+                if (p.user_id) {
+                    onlineUsers.add(p.user_id);
+                    updateUserStatusUI(p.user_id, true);
+                }
+            });
+        })
+        .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+            console.log('Presence Leave:', leftPresences);
+            leftPresences.forEach(p => {
+                if (p.user_id) {
+                    onlineUsers.delete(p.user_id);
+                    updateUserStatusUI(p.user_id, false);
+                }
+            });
+        })
+        .subscribe(async (status) => {
+            console.log("Supabase Realtime status:", status);
+            if (status === 'SUBSCRIBED') {
+                // TRACK PRESENCE
+                const presenceTrackStatus = await realtimeChannel.track({
+                    user_id: currentUser.user_id,
+                    online_at: new Date().toISOString(),
+                });
+                console.log("Presence tracking:", presenceTrackStatus);
+
+                markAllDelivered();
+            }
+        });
+
+    // ================= TYPING INDICATOR CHANNEL =================
+    // Use a separate channel or the same one? Ideally separate 'room:typing' or similar.
+    // Broadcast messages are ephemeral.
+    typingChannel = window.supabase.channel('room:typing');
+
+    typingChannel
+        .on('broadcast', { event: 'typing' }, (payload) => {
+            // payload: { user: userId, typing: boolean, chat: chatId }
+            handleTypingEvent(payload.payload);
+        })
+        .subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+                // console.log("Typing channel subscribed");
+            }
+        });
+}
+
+function sendTypingEvent(isTyping, chatId) {
+    if (!typingChannel || !currentUser) return;
+
+    typingChannel.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: {
+            user: currentUser.user_id,
+            typing: isTyping,
+            chat: chatId
+        }
+    });
+}
+
+function handleTypingEvent({ user, typing, chat }) {
+    // 1. Check if the typing event is relevant to me
+    // It is relevant if:
+    // a) The user "user" is the one I am currently chatting with (currentChat === user)
+    // b) OR, maybe I am in a group (not impl yet)
+
+    // Ignore my own typing (shouldn't happen via broadcast usually but good safety)
+    if (user === currentUser.user_id) return;
+
+    if (currentChat === user) {
+        // Update UI
+        const indicator = document.getElementById("typingIndicator");
+        const nameSpan = document.getElementById("typingUserName");
+
+        if (typing) {
+            // Show
+            if (indicator) {
+                indicator.classList.remove("hidden");
+                // Try to find name in cache or DOM
+                if (nameSpan) {
+                    // Get name from chat header or list
+                    const headerName = document.getElementById("chatHeaderTitle");
+                    nameSpan.innerText = headerName ? headerName.innerText : "User";
+                }
+            }
+        } else {
+            // Hide
+            if (indicator) indicator.classList.add("hidden");
+        }
+    }
+}
+
+function updateAllUserStatuses() {
+    // Iterate all chat items and set status
+    const items = document.querySelectorAll('.chat-item');
+    items.forEach(item => {
+        const uid = item.dataset.id;
+        if (uid) {
+            const isOnline = onlineUsers.has(uid);
+            if (isOnline) item.classList.add('online');
+            else item.classList.remove('online');
+
+            // Also update header if open
+            if (currentChat === uid) {
+                updateChatHeaderStatus(uid, isOnline);
+            }
+        }
+    });
+}
+
+function updateUserStatusUI(userId, isOnline) {
+    // 1. Update List Item
+    const item = document.getElementById(`chat-item-${userId}`);
+    if (item) {
+        if (isOnline) item.classList.add('online');
+        else item.classList.remove('online');
+    }
+
+    // 2. Update Header if Open
+    if (currentChat === userId) {
+        updateChatHeaderStatus(userId, isOnline);
+    }
+}
+
+function updateChatHeaderStatus(userId, isOnline) {
+    const statusEl = document.getElementById("chatStatus");
+    if (statusEl) {
+        statusEl.innerText = isOnline ? "Online" : "Offline";
+        statusEl.style.color = isOnline ? "#22c55e" : "var(--text-secondary)";
+        statusEl.style.fontWeight = isOnline ? "600" : "400";
+    }
+}
+
+function handleRealtimeEvent(payload) {
+    const { eventType, new: newRec, old: oldRec } = payload;
+
+    // 1. FILTER: Only care if it involves ME
+    // Note: 'newRec' is null for DELETE
+    const rec = newRec || oldRec;
+    // But oldRec might only have ID if identity is default.
+    // If newRec exists, check it.
+
+    if (newRec) {
+        // If I am sender or receiver
+        // Note: Supabase returns UUIDs for sender/receiver
+        // currentUser.user_id is now UUID (from login.js)
+        if (newRec.sender !== currentUser.user_id && newRec.receiver !== currentUser.user_id) {
+            return;
+        }
+
+        // 2. CHECK BLOCK: If I blocked the sender, ignore.
+        if (window.blockedUsers && window.blockedUsers.has(newRec.sender)) {
+            console.log("Ignored message from blocked user:", newRec.sender);
+            return;
+        }
+    }
+
+    if (eventType === 'INSERT') {
+        console.log("Realtime INSERT:", newRec);
+        handleIncomingMessage(newRec);
+    }
+    else if (eventType === 'UPDATE') {
+        console.log("Realtime UPDATE:", newRec);
+        handleMessageUpdate(newRec);
+    }
+    else if (eventType === 'DELETE') {
+        // We might only get ID. 
+        if (oldRec && oldRec.id) {
+            removeMsgFromUI(oldRec.id);
+            // Remove from cache
+            messageCache.forEach((msgs, uid) => {
+                const idx = msgs.findIndex(m => m.id == oldRec.id);
+                if (idx > -1) msgs.splice(idx, 1);
+            });
+        }
+    }
+}
+
+function handleIncomingMessage(msg) {
+    // Normalization to match UI expectations
+    // Supabase returns keys as in DB (e.g. user_id). 
+    // UI expects: id, from, to, message, file_url...
+    // My DB cols: sender, receiver. Need mapping.
+
+    const normalizedMsg = {
+        id: msg.id,
+        from: msg.sender,
+        to: msg.receiver,
+        message: msg.message,
+        file_url: msg.file_url,
+        file_type: msg.file_type,
+        timestamp: msg.timestamp, // ISO string
+        status: msg.status,
+        is_revoked: msg.is_revoked,
+        temp_id: null // Realtime doesn't have temp_id
+    };
+
+    // If I sent it, I might have a temp version in UI.
+    if (normalizedMsg.from === currentUser.user_id) {
+        // It's an echo of my own message.
+        // We need to dedupe or replace temp message.
+        // Since we don't have temp_id in DB, we can't easily match.
+        // However, if we just appended it in send(), we likely have it in cache with id=0.
+
+        // Find in cache by content + approximate timestamp?
+        // Or just let it be?
+        // If we don't replace, we might have duplicates until refresh.
+        // Let's rely on standard deduping by ID, but `send()` added it with `id=0`.
+
+        // Strategy: Look for a message in cache with `id=0` and same content.
+        const partnerId = normalizedMsg.to;
+        if (messageCache.has(partnerId)) {
+            const msgs = messageCache.get(partnerId);
+            // Find a temp message (id=0) that matches content
+            const tempMatch = msgs.find(m => m.id === 0 && m.message === normalizedMsg.message && m.file_url === normalizedMsg.file_url);
+            if (tempMatch) {
+                // Update it
+                tempMatch.id = normalizedMsg.id;
+                tempMatch.timestamp = normalizedMsg.timestamp; // sync server time
+
+                // Update UI
+                // We need to find the DOM element. It was rendered with `data-temp-id`.
+                // But we don't know the temp_id here! 
+                // `send()` generated temp_id. `tempMatch` has `temp_id`.
+                const tempId = tempMatch.temp_id;
+
+                const el = document.querySelector(`.msg[data-temp-id="${tempId}"]`);
+                if (el) {
+                    el.id = `msg-${normalizedMsg.id}`;
+                    el.dataset.id = normalizedMsg.id;
+                    el.removeAttribute("data-temp-id");
+                    const tick = el.querySelector(".msg-tick i");
+                    if (tick) tick.className = "fas fa-check"; // Sent
+
+                    // Update context menu handler
+                    let oldAttr = el.getAttribute("oncontextmenu");
+                    if (oldAttr) {
+                        let newAttr = oldAttr.replace(/handleCtxMenu\(event,\s*['"]?(\d+)['"]?/, `handleCtxMenu(event, '${normalizedMsg.id}'`);
+                        el.setAttribute("oncontextmenu", newAttr);
+                    }
+                }
+                return; // Done update
+            }
+        }
+    }
+
+    // Add to Cache (if not me-echo handled above, or if I am receiver)
+    const partnerId = (normalizedMsg.from === currentUser.user_id) ? normalizedMsg.to : normalizedMsg.from;
+
+    if (!messageCache.has(partnerId)) {
+        messageCache.set(partnerId, []);
+    }
+
+    // Check duplicate (by ID)
+    const validCache = messageCache.get(partnerId);
+    if (validCache.find(m => m.id === normalizedMsg.id)) return;
+
+    validCache.push(normalizedMsg);
+
+    // If allowed, play sound for incoming
+    if (normalizedMsg.from !== currentUser.user_id) {
+        if (typeof playNotificationSound === 'function') playNotificationSound();
+    }
+
+    // Update UI if chat open
+    if (currentChat === partnerId) {
+        showMsg(normalizedMsg); // in ui-renderer.js
+        scrollToBottom();
+
+        // Mark as read immediately if I'm looking at it
+        if (normalizedMsg.from !== currentUser.user_id) {
+            markAsRead(normalizedMsg.id);
+        }
+    } else {
+        // Mark as DELIVERED if not read yet
+        if (normalizedMsg.from !== currentUser.user_id && normalizedMsg.status === 'sent') {
+            markAsDelivered(normalizedMsg.id);
+        }
+
+        // Update badge
+        const chatItem = document.getElementById(`chat-item-${partnerId}`);
+        if (chatItem) {
+            const chatName = chatItem.querySelector(".chat-name");
+            let badge = chatItem.querySelector(".unread-badge");
+            if (!badge) {
+                badge = document.createElement("div");
+                badge.className = "unread-badge";
+                badge.innerText = "0";
+                chatName.appendChild(badge);
+            }
+            const count = parseInt(badge.innerText) || 0;
+            badge.innerText = count + 1;
+        }
+    }
+}
+
+function handleMessageUpdate(msg) {
+    // E.g. marked as read, or revoked
+    const normalizedMsg = {
+        id: msg.id,
+        is_revoked: msg.is_revoked,
+        status: msg.status
+    };
+
+    // Update Cache
+    messageCache.forEach(msgs => {
+        const local = msgs.find(m => m.id === normalizedMsg.id);
+        if (local) {
+            local.is_revoked = normalizedMsg.is_revoked;
+            local.status = normalizedMsg.status;
+
+            // Update UI
+            const el = document.getElementById(`msg-${local.id}`);
+            if (el) {
+                // 1. Revoked
+                if (local.is_revoked) {
+                    el.querySelector(".msg-content").innerHTML = `This message was deleted`;
+                    el.classList.add("deleted");
+                    el.classList.remove("has-media", "msg-media");
+                    // Remove media elements
+                    const mediaEls = el.querySelectorAll(".media-box, .chat-video, .chat-audio, .file-card");
+                    mediaEls.forEach(x => x.remove());
+                }
+
+                // 2. Status update (ticks)
+                if (local.from === currentUser.user_id) {
+                    const tick = el.querySelector(".msg-tick i");
+                    if (tick) {
+                        if (local.status === 'read') tick.className = "fas fa-check-double read";
+                        else if (local.status === 'delivered') tick.className = "fas fa-check-double";
+                    }
+                }
+            }
+        }
+    });
+}
+
+function markAsRead(msgId) {
+    if (!currentUser) return;
+    window.supabase.from('messages').update({ status: 'read' }).eq('id', msgId).then(res => {
+        // console.log("Marked as read", res);
+    });
+}
+
+function markAsDelivered(msgId) {
+    if (!currentUser) return;
+    window.supabase.from('messages')
+        .update({ status: 'delivered' })
+        .eq('id', msgId)
+        .eq('status', 'sent')
+        .then(res => {
+            console.log("Marked as delivered:", msgId, res);
+        });
+}
+
+function markAllDelivered() {
+    if (!currentUser) return;
+    console.log("Marking all pending messages as delivered...");
+    window.supabase.from('messages')
+        .update({ status: 'delivered' })
+        .eq('receiver', currentUser.user_id)
+        .eq('status', 'sent')
+        .then(res => {
+            console.log("Marked all pending as delivered:", res);
+        });
+}
+
+function playNotificationSound() {
+    // Placeholder
+}
+
+// Export for chat.js
+window.setupSupabaseRealtime = setupSupabaseRealtime;
+window.markAllDelivered = markAllDelivered;
+window.sendTypingEvent = sendTypingEvent;

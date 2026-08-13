@@ -1,0 +1,23 @@
+/* Modern Chat Application Design */
+/* 
+   Main Entry Point
+   Imports modular CSS files in order.
+*/
+
+/* 1. Variables & Themes */
+@import 'modules/variables.css';
+
+/* 2. Base Styles & Resets */
+@import 'modules/base.css';
+
+/* 3. Authentication Pages */
+@import 'modules/auth.css';
+
+/* 4. Layout (Sidebar, Header, App Structure) */
+@import 'modules/layout.css';
+
+/* 5. Chat & Messages */
+@import 'modules/chat.css';
+
+/* 6. Components (Modals, Overlays, Widgets) */
+@import 'modules/components.css';
