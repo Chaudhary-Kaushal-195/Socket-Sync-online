@@ -30,20 +30,24 @@
             "destination": "/Socket-Sync-online/frontend/sw.js"
         },
         {
-            "source": "/css/:path*",
-            "destination": "/Socket-Sync-online/frontend/css/:path*"
+            "source": "/css/(.*)",
+            "destination": "/Socket-Sync-online/frontend/css/$1"
         },
         {
-            "source": "/js/:path*",
-            "destination": "/Socket-Sync-online/frontend/js/:path*"
+            "source": "/js/(.*)",
+            "destination": "/Socket-Sync-online/frontend/js/$1"
         },
         {
-            "source": "/material/:path*",
-            "destination": "/Socket-Sync-online/frontend/material/:path*"
+            "source": "/material/(.*)",
+            "destination": "/Socket-Sync-online/frontend/material/$1"
         },
         {
-            "source": "/pages/:path*",
-            "destination": "/Socket-Sync-online/frontend/pages/:path*"
+            "source": "/pages/(.*)",
+            "destination": "/Socket-Sync-online/frontend/pages/$1"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/Socket-Sync-online/frontend/pages/login.html"
         }
     ]
 }
