@@ -3,51 +3,51 @@
     "rewrites": [
         {
             "source": "/",
-            "destination": "/Socket-Sync-online/frontend/pages/login.html"
+            "destination": "/frontend/pages/login.html"
         },
         {
             "source": "/login",
-            "destination": "/Socket-Sync-online/frontend/pages/login.html"
+            "destination": "/frontend/pages/login.html"
         },
         {
             "source": "/signup",
-            "destination": "/Socket-Sync-online/frontend/pages/signup.html"
+            "destination": "/frontend/pages/signup.html"
         },
         {
             "source": "/chat",
-            "destination": "/Socket-Sync-online/frontend/pages/chat.html"
+            "destination": "/frontend/pages/chat.html"
         },
         {
             "source": "/oauth-callback",
-            "destination": "/Socket-Sync-online/frontend/pages/oauth-callback.html"
+            "destination": "/frontend/pages/oauth-callback.html"
         },
         {
             "source": "/manifest.json",
-            "destination": "/Socket-Sync-online/frontend/manifest.json"
+            "destination": "/frontend/manifest.json"
         },
         {
             "source": "/sw.js",
-            "destination": "/Socket-Sync-online/frontend/sw.js"
+            "destination": "/frontend/sw.js"
         },
         {
             "source": "/css/(.*)",
-            "destination": "/Socket-Sync-online/frontend/css/$1"
+            "destination": "/frontend/css/$1"
         },
         {
             "source": "/js/(.*)",
-            "destination": "/Socket-Sync-online/frontend/js/$1"
+            "destination": "/frontend/js/$1"
         },
         {
             "source": "/material/(.*)",
-            "destination": "/Socket-Sync-online/frontend/material/$1"
+            "destination": "/frontend/material/$1"
         },
         {
             "source": "/pages/(.*)",
-            "destination": "/Socket-Sync-online/frontend/pages/$1"
+            "destination": "/frontend/pages/$1"
         },
         {
             "source": "/(.*)",
-            "destination": "/Socket-Sync-online/frontend/pages/login.html"
+            "destination": "/frontend/pages/login.html"
         }
     ]
 }
