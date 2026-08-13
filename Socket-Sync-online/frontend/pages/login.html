@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#121212">
+    <link rel="manifest" href="/manifest.json">
+
+    <link rel="icon" type="image/png" href="../material/images/Socket-Sync-logo.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <script>
+        (function() {
+            if (localStorage.getItem("theme") === "light") {
+                document.body && document.body.classList.add("light-mode");
+            }
+        })();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/modules/supabase-client.js"></script>
+
+    <title>Socket-Sync Login</title>
+
+</head>
+
+<body class="auth-body">
+
+    <!-- Auth Navbar -->
+    <nav class="auth-nav">
+
+        <a href="#" class="auth-nav-logo" onclick="switchView(0); return false;">
+            <img src="../material/images/Socket-Sync-logo.png" alt="Logo">
+            Socket-Sync
+        </a>
+        <div class="auth-nav-links">
+            <a href="#" class="auth-link" onclick="switchView(0); return false;">Home</a>
+            <a href="#" class="auth-link" onclick="switchView(1)">About</a>
+            <a href="#" class="auth-link" onclick="switchView(2)">Contact Us</a>
+            <a href="#" class="auth-link" onclick="switchView(3)">Help/Support</a>
+        </div>
+        <i id="themeToggle" class="fas fa-moon" onclick="toggleTheme()" title="Toggle Theme"
+            tabindex="0" role="button" style="font-size: 1.1rem; cursor: pointer; color: var(--text-primary);"></i>
+        <a href="/signup" class="auth-btn-sm">Sign Up</a>
+    </nav>
+
+    <!-- Navigation Dots (Mobile Only) -->
+    <div class="carousel-dots d-md-none">
+        <div class="dot active" onclick="switchView(0)"></div>
+        <div class="dot" onclick="switchView(1)"></div>
+        <div class="dot" onclick="switchView(2)"></div>
+        <div class="dot" onclick="switchView(3)"></div>
+    </div>
+
+    <div id="view-home" class="carousel-view view-center">
+        <div class="auth-box">
+            <h3>
+                <img src="../material/images/Socket-Sync-logo.png" alt="Logo"
+                    style="height: 40px; border-radius: 8px; vertical-align: middle; margin-right: 10px;">
+                Socket-Sync
+            </h3>
+            <div class="auth-row">
+                <!-- LEFT COLUMN: Standard Login -->
+                <div class="auth-col-left">
+                    <form id="loginForm">
+                        <input id="uid" class="form-control" placeholder="Email Address" required>
+                        <input id="pwd" class="form-control" type="password" placeholder="Password" required>
+                        <button type="submit" class="btn btn-dark w-100">Login</button>
+                    </form>
+                    <div class="link-text">
+                        Don't have an account? <a href="/signup">Sign up</a>
+                    </div>
+
+                    <div class="social-divider">
+                        <span>or continue with</span>
+                    </div>
+
+                    <div class="social-login-buttons">
+                        <button onclick="loginWithGoogle()" class="social-btn google-btn">
+                            <i class="fab fa-google"></i> Google
+                        </button>
+                        <button onclick="loginWithGithub()" class="social-btn github-btn">
+                            <i class="fab fa-github"></i> GitHub
+                        </button>
+                    </div>
+                </div>
+
+                <!-- VERTICAL DIVIDER -->
+                <div class="auth-divider-vert"></div>
+
+                <!-- RIGHT COLUMN: Remote Login -->
+                <div class="auth-col-right">
+                    <div class="remote-login-section">
+                        <h5 style="margin-bottom:15px; color:var(--text-primary);">Remote Login</h5>
+                        <div id="remote-login-qr">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <p style="margin-top:15px; font-size:0.85rem;">
+                            Scan with <strong>Socket-Sync</strong> on your phone<br>
+                            (Settings > Link Device)
+                        </p>
+                        <div id="remote-req-id" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Scanner Lib -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+    <!-- Info Modals -->
+    <!-- About Modal -->
+    <!-- Info Modals (Carousel Views) -->
+    <!-- About Modal (Index 1) -->
+    <div id="modal-about" class="carousel-view view-right">
+        <div class="auth-box zoom-card">
+            <h2 style="color: var(--primary-color); text-align: center; margin-bottom: 20px;">About Socket Sync</h2>
+            <p style="text-align: center; margin-bottom: 15px;">Socket Sync is a cutting-edge real-time communication
+                platform designed for seamless connectivity.</p>
+            <h3 style="text-align: center; margin-top: 20px; font-size: 1.2rem;">Technology Stack</h3>
+            <ul style="list-style: none; padding: 0; text-align: center;">
+                <li><strong>Frontend:</strong> HTML5, CSS3, JavaScript (Bootstrap 5)</li>
+                <li><strong>Backend:</strong> Python (Flask, Flask-SocketIO)</li>
+                <li><strong>Database:</strong> MySQL , PostgreSQL</li>
+                <li><strong>Analytics:</strong> Matplotlib, NumPy, Pandas</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Contact Modal (Index 2) -->
+    <div id="modal-contact" class="carousel-view view-right">
+        <div class="auth-box zoom-card">
+            <h2 style="color: var(--primary-color); text-align: center; margin-bottom: 20px;">Contact Us</h2>
+            <p style="text-align: center; margin-bottom: 15px;">For inquiries, please reach out to our team:</p>
+            <ul style="list-style: none; padding: 0; text-align: center;">
+                <li style="margin-bottom: 15px;">
+                    <i class="fas fa-user-circle" style="color: var(--primary-color); margin-right: 10px;"></i>
+                    <strong>Chaudhary Kaushal Rakeshbhai</strong>
+                </li>
+                <li style="margin-bottom: 15px;">
+                    <i class="fas fa-user-circle" style="color: var(--primary-color); margin-right: 10px;"></i>
+                    <strong>Thakor Kanaiya</strong>
+                </li>
+                <li>
+                    <i class="fas fa-user-circle" style="color: var(--primary-color); margin-right: 10px;"></i>
+                    <strong>Suriya Mihir</strong>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Help Modal (Index 3) -->
+    <div id="modal-help" class="carousel-view view-right">
+        <div class="auth-box zoom-card">
+            <h2 style="color: var(--primary-color); text-align: center; margin-bottom: 20px;">Help & Support</h2>
+            <p style="margin-bottom: 15px;">New to Socket Sync? Here's how to get started:</p>
+            <ol style="padding-left: 20px;">
+                <li style="margin-bottom: 8px;"><strong>Sign Up:</strong> Create an account with your User ID and
+                    Password.</li>
+                <li style="margin-bottom: 8px;"><strong>Login:</strong> Access your account using your credentials or QR
+                    code.</li>
+                <li style="margin-bottom: 8px;"><strong>Chat:</strong> Select a user from the sidebar to start
+                    messaging.</li>
+                <li style="margin-bottom: 8px;"><strong>Share:</strong> You can share images, videos, and files
+                    securely.</li>
+            </ol>
+            <p style="margin-top: 20px; font-size: 0.9rem; text-align: center; color: var(--text-secondary);">Still
+                facing issues? Contact us for support.</p>
+        </div>
+    </div>
+
+    <!-- Modal Script -->
+    <script>
+        // Carousel Logic
+        let currentIndex = 0;
+        const views = ['view-home', 'modal-about', 'modal-contact', 'modal-help'];
+
+        function switchView(targetIndex) {
+            document.body.classList.remove("menu-active"); // Close mobile menu if open
+            if (currentIndex === targetIndex) return;
+
+            const currentView = document.getElementById(views[currentIndex]);
+            const nextView = document.getElementById(views[targetIndex]);
+
+            // Determine flow direction and corresponding classes
+            const isForward = targetIndex > currentIndex;
+            const enterFromClass = isForward ? 'view-right' : 'view-left';
+            const exitToClass = isForward ? 'view-left' : 'view-right';
+
+            // 1. Prepare Next View (Instant move to start position if needed)
+            if (!nextView.classList.contains(enterFromClass)) {
+                nextView.style.transition = 'none';
+                nextView.classList.remove('view-center', 'view-left', 'view-right');
+                nextView.classList.add(enterFromClass);
+
+                // Force Reflow
+                void nextView.offsetWidth;
+
+                // Restore Transition
+                nextView.style.transition = '';
+            }
+
+            // 2. Animate
+            requestAnimationFrame(() => {
+                // Animate Current View Out
+                currentView.classList.remove('view-center', 'view-left', 'view-right');
+                currentView.classList.add(exitToClass);
+
+                // Animate Next View In
+                nextView.classList.remove('view-left', 'view-right');
+                nextView.classList.add('view-center');
+            });
+
+            // Update dots
+            const dots = document.querySelectorAll('.carousel-dots .dot');
+            if (dots.length > 0) {
+                dots[currentIndex].classList.remove('active');
+                dots[targetIndex].classList.add('active');
+            }
+
+            currentIndex = targetIndex;
+        }
+
+        // Swipe Detection
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+
+        function handleSwipe() {
+            const threshold = 50; // minimum distance to register as swipe
+            if (touchStartX - touchEndX > threshold) {
+                // Swipe Left (Next)
+                if (currentIndex < views.length - 1) switchView(currentIndex + 1);
+            } else if (touchEndX - touchStartX > threshold) {
+                // Swipe Right (Previous)
+                if (currentIndex > 0) switchView(currentIndex - 1);
+            }
+        }
+    </script>
+
+    <script src="../js/ui.js?v=39"></script>
+    <script type="module" src="../js/login.js?v=39"></script>
+</body>
+
+</html>

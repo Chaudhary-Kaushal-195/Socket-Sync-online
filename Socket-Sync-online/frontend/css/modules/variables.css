@@ -1,0 +1,151 @@
+/* =========================================
+   VARIABLES & THEMES - Modern Glassmorphism
+   ========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+   /* =========================================
+       DEEP DARK "MESSENGER" THEME
+       Enhanced with Glassmorphism & Modern Effects
+       ========================================= */
+
+   /* Brand & Accents (Pink/Purple Gradient) */
+   --primary-gradient: linear-gradient(135deg, #FF61D2 0%, #FE9090 100%);
+   --primary-color: #FF61D2;
+   --primary-hover: #FE9090;
+   --accent-color: #00D9FF;
+
+   /* Backgrounds - Deep Blue/Black */
+   --bg-dark: #0a0d14;
+   --bg-card: #12161f;
+   --bg-sidebar: #0f1218;
+   --bg-input: #1a1f2e;
+   --bg-hover: rgba(255, 255, 255, 0.04);
+
+   /* Text */
+   --text-primary: #ffffff;
+   --text-secondary: #6b7280;
+
+   /* Borders */
+   --border-color: rgba(255, 255, 255, 0.06);
+
+   /* Messages */
+   --msg-sent-bg: var(--primary-gradient);
+   --msg-sent-bg-gradient: var(--primary-gradient);
+   --msg-sent-text: #ffffff;
+
+   --msg-recv-bg: rgba(30, 35, 51, 0.8);
+   --msg-recv-text: #ffffff;
+
+   /* Layout */
+   --header-height: 70px;
+   --sidebar-width: 320px;
+
+   /* Modern Radius */
+   --radius-xs: 8px;
+   --radius-sm: 12px;
+   --radius-md: 20px;
+   --radius-lg: 28px;
+   --radius-xl: 50px;
+   --radius-full: 9999px;
+
+   /* ========== GLASSMORPHISM ========== */
+   --glass-blur: blur(20px);
+   --glass-blur-heavy: blur(40px);
+   --glass-blur-light: blur(10px);
+
+   --glass-bg: rgba(18, 22, 31, 0.75);
+   --glass-bg-light: rgba(255, 255, 255, 0.03);
+   --glass-bg-dark: rgba(10, 13, 20, 0.9);
+
+   --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+   --glass-border-light: 1px solid rgba(255, 255, 255, 0.04);
+   --glass-border-focus: 1px solid rgba(255, 97, 210, 0.4);
+
+   /* ========== SHADOWS & GLOWS ========== */
+   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+   --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+   --shadow-xl: 0 24px 64px rgba(0, 0, 0, 0.6);
+
+   --glow-primary: 0 4px 20px rgba(255, 97, 210, 0.35);
+   --glow-primary-strong: 0 8px 40px rgba(255, 97, 210, 0.5);
+   --glow-accent: 0 4px 20px rgba(0, 217, 255, 0.3);
+   --glow-focus: 0 0 0 4px rgba(255, 97, 210, 0.15);
+
+   /* ========== ANIMATIONS ========== */
+   --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+   --ease-out: cubic-bezier(0, 0, 0.2, 1);
+   --ease-in: cubic-bezier(0.4, 0, 1, 1);
+   --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+   --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+   --ease-elastic: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+
+   --duration-fast: 150ms;
+   --duration-normal: 250ms;
+   --duration-slow: 400ms;
+   --duration-slower: 600ms;
+
+   /* ========== GRADIENTS ========== */
+   --gradient-dark: linear-gradient(180deg, rgba(18, 22, 31, 0) 0%, rgba(10, 13, 20, 1) 100%);
+   --gradient-glow: radial-gradient(ellipse at center, rgba(255, 97, 210, 0.1) 0%, transparent 70%);
+   --gradient-shine: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.05) 50%, transparent 70%);
+
+   --font-family: 'Outfit', sans-serif;
+}
+
+/* =========================================
+   LIGHT MODE - Modern Minimalist
+   ========================================= */
+body.light-mode {
+   /* Brand - Soft Indigo Accent */
+   --primary-gradient: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+   --primary-color: #6366F1;
+   --primary-hover: #4F46E5;
+   --accent-color: #06B6D4;
+
+   /* Backgrounds - Soft Neutrals */
+   --bg-dark: #f8fafc;
+   --bg-card: #ffffff;
+   --bg-sidebar: #ffffff;
+   --bg-input: #f1f5f9;
+   --bg-hover: rgba(0, 0, 0, 0.02);
+
+   /* Text - Refined Grays */
+   --text-primary: #0f172a;
+   --text-secondary: #94a3b8;
+
+   /* Borders */
+   --border-color: rgba(0, 0, 0, 0.06);
+
+   /* Messages */
+   --msg-recv-bg: #f1f5f9;
+   --msg-recv-text: #0f172a;
+   --msg-sent-bg: var(--primary-gradient);
+   --msg-sent-text: #FFFFFF;
+
+   /* Glassmorphism - Light Mode */
+   --glass-bg: rgba(255, 255, 255, 0.8);
+   --glass-bg-light: rgba(255, 255, 255, 0.5);
+   --glass-bg-dark: rgba(248, 250, 252, 0.95);
+
+   --glass-border: 1px solid rgba(0, 0, 0, 0.05);
+   --glass-border-light: 1px solid rgba(0, 0, 0, 0.03);
+   --glass-border-focus: 1px solid rgba(99, 102, 241, 0.4);
+
+   /* Shadows - Softer */
+   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+   --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.1);
+
+   --glow-primary: 0 4px 16px rgba(99, 102, 241, 0.2);
+   --glow-primary-strong: 0 8px 32px rgba(99, 102, 241, 0.3);
+   --glow-accent: 0 4px 16px rgba(6, 182, 212, 0.2);
+   --glow-focus: 0 0 0 4px rgba(99, 102, 241, 0.1);
+
+   /* Gradients */
+   --gradient-dark: linear-gradient(180deg, rgba(248, 250, 252, 0) 0%, rgba(241, 245, 249, 1) 100%);
+   --gradient-glow: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
+   --gradient-shine: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.5) 50%, transparent 70%);
+}

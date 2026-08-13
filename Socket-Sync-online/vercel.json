@@ -1,0 +1,27 @@
+{
+    "version": 2,
+    "framework": null,
+    "outputDirectory": "public",
+    "rewrites": [
+        {
+            "source": "/",
+            "destination": "/pages/login.html"
+        },
+        {
+            "source": "/login",
+            "destination": "/pages/login.html"
+        },
+        {
+            "source": "/signup",
+            "destination": "/pages/signup.html"
+        },
+        {
+            "source": "/chat",
+            "destination": "/pages/chat.html"
+        },
+        {
+            "source": "/oauth-callback",
+            "destination": "/pages/oauth-callback.html"
+        }
+    ]
+}
