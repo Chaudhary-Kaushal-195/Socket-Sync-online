@@ -1,0 +1,49 @@
+{
+    "version": 2,
+    "rewrites": [
+        {
+            "source": "/",
+            "destination": "/Socket-Sync-online/frontend/pages/login.html"
+        },
+        {
+            "source": "/login",
+            "destination": "/Socket-Sync-online/frontend/pages/login.html"
+        },
+        {
+            "source": "/signup",
+            "destination": "/Socket-Sync-online/frontend/pages/signup.html"
+        },
+        {
+            "source": "/chat",
+            "destination": "/Socket-Sync-online/frontend/pages/chat.html"
+        },
+        {
+            "source": "/oauth-callback",
+            "destination": "/Socket-Sync-online/frontend/pages/oauth-callback.html"
+        },
+        {
+            "source": "/manifest.json",
+            "destination": "/Socket-Sync-online/frontend/manifest.json"
+        },
+        {
+            "source": "/sw.js",
+            "destination": "/Socket-Sync-online/frontend/sw.js"
+        },
+        {
+            "source": "/css/:path*",
+            "destination": "/Socket-Sync-online/frontend/css/:path*"
+        },
+        {
+            "source": "/js/:path*",
+            "destination": "/Socket-Sync-online/frontend/js/:path*"
+        },
+        {
+            "source": "/material/:path*",
+            "destination": "/Socket-Sync-online/frontend/material/:path*"
+        },
+        {
+            "source": "/pages/:path*",
+            "destination": "/Socket-Sync-online/frontend/pages/:path*"
+        }
+    ]
+}
