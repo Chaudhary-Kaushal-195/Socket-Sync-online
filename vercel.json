@@ -2,26 +2,54 @@
     "version": 2,
     "framework": null,
     "outputDirectory": "frontend",
-    "rewrites": [
+    "routes": [
         {
-            "source": "/",
-            "destination": "/pages/login.html"
+            "src": "/css/(.*)",
+            "dest": "/css/$1"
         },
         {
-            "source": "/login",
-            "destination": "/pages/login.html"
+            "src": "/js/(.*)",
+            "dest": "/js/$1"
         },
         {
-            "source": "/signup",
-            "destination": "/pages/signup.html"
+            "src": "/material/(.*)",
+            "dest": "/material/$1"
         },
         {
-            "source": "/chat",
-            "destination": "/pages/chat.html"
+            "src": "/pages/(.*)",
+            "dest": "/pages/$1"
         },
         {
-            "source": "/oauth-callback",
-            "destination": "/pages/oauth-callback.html"
+            "src": "/manifest.json",
+            "dest": "/manifest.json"
+        },
+        {
+            "src": "/sw.js",
+            "dest": "/sw.js"
+        },
+        {
+            "src": "/",
+            "dest": "/pages/login.html"
+        },
+        {
+            "src": "/login",
+            "dest": "/pages/login.html"
+        },
+        {
+            "src": "/signup",
+            "dest": "/pages/signup.html"
+        },
+        {
+            "src": "/chat",
+            "dest": "/pages/chat.html"
+        },
+        {
+            "src": "/oauth-callback",
+            "dest": "/pages/oauth-callback.html"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/pages/login.html"
         }
     ]
 }
