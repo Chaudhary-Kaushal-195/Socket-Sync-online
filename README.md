@@ -5,7 +5,7 @@
 
 **A Modern, Real-Time Communication Platform with WebRTC Calling, Rich Media Sharing & Live Analytics**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![License: Proprietary](https://img.shields.io/badge/License-All%20Rights%20Reserved-red.svg?style=for-the-badge)](LICENSE)
 [![Python Version](https://img.shields.io/badge/Python-3.9%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![Supabase](https://img.shields.io/badge/Database-Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
 [![Streamlit](https://img.shields.io/badge/Analytics-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io)
@@ -331,7 +331,7 @@ Contributions are always welcome! If you'd like to improve Socket-Sync:
 
 ## 📄 License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+This project is **Proprietary** and protected by copyright law. All rights reserved by **Kaushal Chaudhary**. No part of this code may be copied, modified, distributed, or used without prior written authorization. See [LICENSE](LICENSE) for details.
 
 ---
 
