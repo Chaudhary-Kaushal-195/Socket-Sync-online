@@ -75,41 +75,37 @@ Whether deployed as a serverless SPA on **Vercel** with **Supabase**, or run wit
 ## 🏛️ Architecture & Tech Stack
 
 ```mermaid
-flowchart TD
-    subgraph Client["🖥️ Frontend (PWA / SPA)"]
-        UI["Modern Glassmorphism UI (HTML5 / Vanilla CSS)"]
-        JS_Core["chat.js / ui.js / media.js / keyboard.js"]
-        WebRTC["WebRTC Audio/Video Engine (call.js)"]
-        SW["Service Worker (sw.js) & LocalStorage Cache"]
+graph TD
+    subgraph Frontend ["🖥️ Frontend (PWA / SPA)"]
+        UI["UI Layer<br/>(HTML5 / Glassmorphism CSS)"]
+        ClientApp["Client Core<br/>(chat.js / ui.js / media.js)"]
+        WebRTCEngine["WebRTC Engine<br/>(Audio & Video Calling)"]
+        OfflineCache["Service Worker & LocalStorage<br/>(Offline Queue)"]
     end
 
-    subgraph Backend_Services["☁️ Backend & Cloud Services"]
-        subgraph Supabase["Supabase Cloud"]
-            Auth["Supabase Auth (OAuth & Email)"]
-            DB["PostgreSQL with Row Level Security (RLS)"]
-            Storage["Storage Buckets (chat-media)"]
-            Realtime["Realtime Replication Channels"]
-        end
-        
-        subgraph Flask_Backend["Optional Python Backend"]
-            Flask["Flask Server (server.py)"]
-            SocketIO["Flask-SocketIO + Eventlet"]
-        end
+    subgraph SupabaseCloud ["☁️ Supabase Cloud (Primary)"]
+        AuthService["Authentication<br/>(Email / Password & OAuth)"]
+        PostgresDB["PostgreSQL Database<br/>(Messages, Profiles, RLS)"]
+        RealtimeEngine["Realtime Engine<br/>(Instant Message Sync)"]
+        StorageEngine["Media Storage<br/>(chat-media Bucket)"]
     end
 
-    subgraph Analytics["📊 Analytics Suite"]
-        Streamlit["Streamlit Dashboard (dashboard.py)"]
-        Pandas["Pandas & Matplotlib Data Processing"]
+    subgraph PythonBackend ["🐍 Python Services (Add-on)"]
+        FlaskServer["Flask + Socket.IO Server<br/>(WebSocket Fallback)"]
+        AnalyticsDashboard["Streamlit Analytics<br/>(Live Platform Metrics)"]
     end
 
-    UI <--> JS_Core
-    JS_Core <--> WebRTC
-    JS_Core <--> SW
-    
-    JS_Core <-->|"Direct REST & Realtime"| Supabase
-    JS_Core <-->|"WebSocket Fallback"| SocketIO
-    
-    Streamlit <-->|"REST API Query"| DB
+    UI <--> ClientApp
+    ClientApp <--> WebRTCEngine
+    ClientApp <--> OfflineCache
+
+    ClientApp -->|Auth & Queries| AuthService
+    ClientApp -->|Data & Storage| PostgresDB
+    ClientApp <-->|Realtime Sync| RealtimeEngine
+    ClientApp -->|File Uploads| StorageEngine
+
+    ClientApp -.->|Fallback Sync| FlaskServer
+    AnalyticsDashboard -->|Read-only Analytics| PostgresDB
 ```
 
 ### Technology Breakdown
